@@ -3,77 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Koyu Mod Sohbet Uygulaması</title>
+    <title>SnapChat Tarzı Sohbet</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* Snapchat benzeri özel scrollbar ve koyu stil iyileştirmeleri */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 h-screen flex flex-col justify-center items-center">
+<body class="bg-black text-white h-screen flex justify-center items-center overflow-hidden font-sans">
 
     <!-- Giriş / Kayıt Ekranı -->
-    <div class="w-full max-w-md bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700" id="auth-container">
-        <h2 class="text-2xl font-bold mb-4 text-center text-indigo-400">Sohbet Odasına Giriş</h2>
+    <div class="w-full max-w-sm bg-gray-900 p-8 rounded-3xl shadow-2xl border border-gray-800" id="auth-container">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-black tracking-wider text-yellow-400">SNAPCHAT</h1>
+            <p class="text-xs text-gray-400 mt-1">Arkadaşlarınla anında mesajlaş</p>
+        </div>
         
-        <div class="flex mb-4 border-b border-gray-700">
-            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-semibold text-indigo-400 border-b-2 border-indigo-400">Giriş Yap</button>
-            <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 font-semibold text-gray-400">Kayıt Ol</button>
+        <div class="flex mb-6 bg-gray-800 p-1 rounded-xl">
+            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-yellow-400 text-black transition">Giriş</button>
+            <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition">Kayıt</button>
         </div>
 
         <div id="login-form" class="space-y-4">
-            <input type="text" id="login-username" placeholder="Kullanıcı Adı" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white">
-            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white">
-            <button onclick="login()" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Giriş Yap</button>
+            <input type="text" id="login-username" placeholder="Kullanıcı adı" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm focus:outline-none focus:border-yellow-400 text-white placeholder-gray-500">
+            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm focus:outline-none focus:border-yellow-400 text-white placeholder-gray-500">
+            <button onclick="login()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-xl transition shadow-lg shadow-yellow-400/10">Giriş Yap</button>
         </div>
 
         <div id="register-form" class="space-y-4 hidden">
-            <input type="text" id="reg-username" placeholder="Kullanıcı Adı Seçin" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white">
-            <input type="password" id="reg-password" placeholder="Şifre Belirleyin" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white">
-            <button onclick="register()" class="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition">Kayıt Ol</button>
+            <input type="text" id="reg-username" placeholder="Kullanıcı adı seç" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm focus:outline-none focus:border-yellow-400 text-white placeholder-gray-500">
+            <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-sm focus:outline-none focus:border-yellow-400 text-white placeholder-gray-500">
+            <button onclick="register()" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 rounded-xl transition shadow-lg shadow-yellow-400/10">Kayıt Ol</button>
         </div>
         
-        <p id="auth-msg" class="mt-4 text-center text-sm text-red-400"></p>
+        <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
     </div>
 
-    <!-- Sohbet Arayüzü (Sidebar + Mesaj Alanı) -->
-    <div id="chat-container" class="w-full max-w-4xl h-[85vh] bg-gray-800 rounded-xl shadow-2xl border border-gray-700 hidden flex overflow-hidden">
+    <!-- Snapchat Sohbet Arayüzü (Sidebar + Chat Alanı) -->
+    <div id="chat-container" class="w-full max-w-5xl h-[92vh] bg-gray-950 rounded-3xl shadow-2xl border border-gray-800 hidden flex overflow-hidden">
         
-        <!-- Sol Kenar Çubuğu (Kullanıcı Arama ve Sohbet Listesi) -->
-        <div class="w-1/3 bg-gray-900 border-r border-gray-700 flex flex-col">
-            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-                <span id="current-username" class="font-bold text-indigo-400">Kullanıcı</span>
-                <button onclick="logout()" class="text-xs bg-red-600/80 hover:bg-red-600 px-2 py-1 rounded text-white transition">Çıkış</button>
+        <!-- SOL PANEL: Profil, Arama ve Sohbet Akışı / Arkadaşlar -->
+        <div class="w-80 bg-gray-900 border-r border-gray-800 flex flex-col">
+            <!-- Üst Profil ve Çıkış -->
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-black font-black text-lg" id="profile-initial">S</div>
+                    <div>
+                        <span id="current-username" class="font-bold text-sm block leading-tight text-white">Kullanıcı</span>
+                        <span class="text-[10px] text-green-400 font-semibold flex items-center gap-1">● Çevrimiçi</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-xs text-gray-400 hover:text-red-400 bg-gray-800 hover:bg-gray-700 px-2.5 py-1.5 rounded-lg transition">Çıkış</button>
             </div>
 
-            <!-- Kullanıcı Arama Çubuğu -->
-            <div class="p-3 border-b border-gray-800">
-                <input type="text" id="search-input" oninput="searchUsers()" placeholder="Kullanıcı ara..." class="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                <div id="search-results" class="mt-2 space-y-1 max-h-32 overflow-y-auto"></div>
+            <!-- Snapchat Tarzı Arama Çubuğu -->
+            <div class="p-3 border-b border-gray-800 bg-gray-900">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">🔍</span>
+                    <input type="text" id="search-input" oninput="searchUsers()" placeholder="Arkadaşlar veya yeni kişiler ara..." class="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-yellow-400 placeholder-gray-500">
+                </div>
+                <!-- Arama Sonuçları Açılır Kutusu -->
+                <div id="search-results" class="mt-2 space-y-1 max-h-40 overflow-y-auto"></div>
             </div>
 
-            <!-- Sohbet Odaları / Arkadaşlar Listesi -->
+            <!-- Sohbetler ve Arkadaşlar Listesi -->
             <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                <div onclick="selectRoom('Genel Grup')" id="room-Genel Grup" class="p-2.5 rounded-lg cursor-pointer bg-indigo-600/30 text-indigo-300 font-medium text-sm flex items-center justify-between transition">
-                    <span>💬 Genel Grup Sohbeti</span>
+                <div class="text-[10px] font-bold text-gray-500 px-3 uppercase tracking-wider mb-1 mt-2">Sohbetler</div>
+                
+                <!-- Genel Grup Öğe Kartı -->
+                <div onclick="selectRoom('Genel Grup')" id="room-Genel Grup" class="p-3 rounded-2xl cursor-pointer bg-gray-800/80 text-white flex items-center space-x-3 transition group hover:bg-gray-800">
+                    <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-lg font-bold">💬</div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-xs font-bold truncate">Genel Grup Sohbeti</h4>
+                        <p class="text-[11px] text-gray-400 truncate">Herkese açık oda</p>
+                    </div>
                 </div>
-                <div id="friends-list" class="space-y-1 mt-2">
-                    <!-- Arkadaş listesi dinamik gelecek -->
-                </div>
+
+                <!-- Dinamik Arkadaş/DM Listesi -->
+                <div id="friends-list" class="space-y-1 mt-1"></div>
             </div>
         </div>
 
-        <!-- Sağ Ana Sohbet Alanı -->
-        <div class="flex-1 flex flex-col bg-gray-800">
+        <!-- SAĞ PANEL: Aktif Sohbet Alanı -->
+        <div class="flex-1 flex flex-col bg-black">
             <!-- Sohbet Başlığı -->
-            <div class="p-4 border-b border-gray-700 bg-gray-850 flex items-center">
-                <h3 id="active-room-title" class="font-bold text-lg text-gray-200">Genel Grup</h3>
+            <div class="px-6 py-4 border-b border-gray-900 bg-gray-950 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center text-yellow-400 font-bold text-sm" id="chat-header-icon">💬</div>
+                    <div>
+                        <h3 id="active-room-title" class="font-bold text-sm text-white">Genel Grup Sohbeti</h3>
+                        <span class="text-[10px] text-gray-500" id="active-room-sub">Sohbet odası aktif</span>
+                    </div>
+                </div>
             </div>
 
             <!-- Mesaj Listesi -->
-            <ul id="messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-900/50 text-sm"></ul>
+            <ul id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-black text-sm"></ul>
 
             <!-- Mesaj Gönderme Formu -->
-            <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 border-t border-gray-700 bg-gray-800 flex gap-2">
-                <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <button class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">Gönder</button>
+            <form id="chat-form" onsubmit="sendMessage(event)" class="p-4 border-t border-gray-900 bg-gray-950 flex items-center gap-3">
+                <input id="m" autocomplete="off" placeholder="Mesaj gönder..." class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-2xl text-xs text-white focus:outline-none focus:border-yellow-400 placeholder-gray-500" />
+                <button class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-5 py-3 rounded-2xl transition text-xs uppercase tracking-wider shadow-lg shadow-yellow-400/10">Gönder</button>
             </form>
         </div>
     </div>
@@ -93,13 +127,13 @@
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
                 regForm.classList.add('hidden');
-                tabLogin.className = "flex-1 py-2 font-semibold text-indigo-400 border-b-2 border-indigo-400";
-                tabReg.className = "flex-1 py-2 font-semibold text-gray-400";
+                tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-yellow-400 text-black transition";
+                tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
             } else {
                 regForm.classList.remove('hidden');
                 loginForm.classList.add('hidden');
-                tabReg.className = "flex-1 py-2 font-semibold text-emerald-400 border-b-2 border-emerald-400";
-                tabLogin.className = "flex-1 py-2 font-semibold text-gray-400";
+                tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-yellow-400 text-black transition";
+                tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
             }
             document.getElementById('auth-msg').innerText = "";
         }
@@ -110,7 +144,7 @@
             const msgEl = document.getElementById('auth-msg');
 
             if(!username || !password) {
-                msgEl.innerText = "Lütfen tüm alanları doldurun!";
+                msgEl.innerText = "Lütfen alanları doldurun!";
                 return;
             }
 
@@ -121,11 +155,11 @@
             });
             const data = await res.json();
             if (data.success) {
-                msgEl.className = "mt-4 text-center text-sm text-emerald-400";
+                msgEl.className = "mt-4 text-center text-xs text-green-400 font-medium";
                 msgEl.innerText = "Kayıt başarılı! Giriş yapabilirsiniz.";
                 switchTab('login');
             } else {
-                msgEl.className = "mt-4 text-center text-sm text-red-400";
+                msgEl.className = "mt-4 text-center text-xs text-red-400 font-medium";
                 msgEl.innerText = data.message;
             }
         }
@@ -136,7 +170,7 @@
             const msgEl = document.getElementById('auth-msg');
 
             if(!username || !password) {
-                msgEl.innerText = "Lütfen tüm alanları doldurun!";
+                msgEl.innerText = "Lütfen alanları doldurun!";
                 return;
             }
 
@@ -151,7 +185,8 @@
                 currentUser = data.username;
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('chat-container').classList.remove('hidden');
-                document.getElementById('current-username').innerText = `@${currentUser}`;
+                document.getElementById('current-username').innerText = currentUser;
+                document.getElementById('profile-initial').innerText = currentUser.charAt(0).toUpperCase();
                 
                 socket = io();
                 selectRoom('Genel Grup');
@@ -160,8 +195,13 @@
                     if (data.room === currentRoom) {
                         const item = document.createElement('li');
                         const isMe = data.sender === currentUser;
-                        item.className = `p-2.5 rounded-lg max-w-[80%] ${isMe ? 'bg-indigo-600 ml-auto text-white' : 'bg-gray-700 text-gray-200'}`;
-                        item.innerHTML = `<span class="block text-xs opacity-70 mb-0.5">${data.sender}</span>${data.text}`;
+                        item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+                        item.innerHTML = `
+                            <div class="max-w-[70%] px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-yellow-400 text-black font-medium rounded-br-xs' : 'bg-gray-800 text-white rounded-bl-xs'}">
+                                ${!isMe ? `<span class="block text-[10px] text-yellow-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
+                                ${data.text}
+                            </div>
+                        `;
                         document.getElementById('messages').appendChild(item);
                         window.scrollTo(0, document.body.scrollHeight);
                     }
@@ -187,8 +227,8 @@
             resultsEl.innerHTML = "";
             usersList.forEach(u => {
                 const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-gray-800 px-2 py-1.5 rounded text-xs text-gray-200";
-                div.innerHTML = `<span>@${u.username}</span> <button onclick="addFriend('${u.username}')" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-0.5 rounded text-white">Ekle</button>`;
+                div.className = "flex justify-between items-center bg-gray-800 px-3 py-2 rounded-xl text-xs text-white";
+                div.innerHTML = `<span>@${u.username}</span> <button onclick="addFriend('${u.username}')" class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-2.5 py-1 rounded-lg">Ekle</button>`;
                 resultsEl.appendChild(div);
             });
         }
@@ -220,8 +260,14 @@
                     const roomName = [currentUser, f].sort().join('_');
                     const div = document.createElement('div');
                     div.id = `room-${roomName}`;
-                    div.className = "p-2.5 rounded-lg cursor-pointer hover:bg-gray-800 text-gray-300 text-sm flex items-center justify-between transition";
-                    div.innerHTML = `<span>👤 ${f}</span>`;
+                    div.className = "p-3 rounded-2xl cursor-pointer hover:bg-gray-950 text-white flex items-center space-x-3 transition";
+                    div.innerHTML = `
+                        <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-bold text-sm text-yellow-400">${f.charAt(0).toUpperCase()}</div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-xs font-bold truncate">@${f}</h4>
+                            <p class="text-[10px] text-gray-500 truncate">Özel Mesaj (DM)</p>
+                        </div>
+                    `;
                     div.onclick = () => selectRoom(roomName, f);
                     listEl.appendChild(div);
                 });
@@ -230,7 +276,10 @@
 
         function selectRoom(room, displayName = "Genel Grup") {
             currentRoom = room;
-            document.getElementById('active-room-title').innerText = room === 'Genel Grup' ? 'Genel Grup Sohbeti' : `Özel Sohbet: @${displayName}`;
+            const isGroup = room === 'Genel Grup';
+            document.getElementById('active-room-title').innerText = isGroup ? 'Genel Grup Sohbeti' : `@${displayName}`;
+            document.getElementById('active-room-sub').innerText = isGroup ? 'Herkese açık oda' : 'Birebir özel sohbet';
+            document.getElementById('chat-header-icon').innerText = isGroup ? '💬' : displayName.charAt(0).toUpperCase();
             document.getElementById('messages').innerHTML = "";
             if(socket) socket.emit('join room', room);
         }
