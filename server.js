@@ -8,9 +8,9 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [] }
+const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, besties: [] }
 const groups = []; // { id, name, creator, members: [] }
-const activeSockets = {}; // username -> socket.id eşlemesi
+const activeSockets = {};
 
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
@@ -25,7 +25,9 @@ app.post('/api/register', (req, res) => {
         notifications: [],
         following: [],
         followers: [],
-        archivedRooms: []
+        archivedRooms: [],
+        nicknames: {},
+        besties: []
     });
     res.json({ success: true });
 });
@@ -49,7 +51,6 @@ app.get('/api/search', (req, res) => {
     res.json(results);
 });
 
-// Arkadaşlık İsteği Gönder & Anlık Bildir
 app.post('/api/send-request', (req, res) => {
     const { username, targetUser } = req.body;
     const target = users.find(u => u.username === targetUser);
@@ -59,24 +60,19 @@ app.post('/api/send-request', (req, res) => {
 
     const newReq = { from: username, type: 'friend' };
     const newNotif = { text: `@${username} sana arkadaşlık isteği gönderdi.`, date: new Date().toLocaleTimeString() };
-    
     target.requests.push(newReq);
     target.notifications.unshift(newNotif);
 
-    // Eğer karşı taraf çevrimdiyse (socket'i varsa) anlık bildir
     if (activeSockets[targetUser]) {
         io.to(activeSockets[targetUser]).emit('new notification', { request: newReq, notification: newNotif });
     }
-
     res.json({ success: true });
 });
 
-// Takip Et / Takipten Çık & Anlık Bildir
 app.post('/api/toggle-follow', (req, res) => {
     const { username, targetUser } = req.body;
     const user = users.find(u => u.username === username);
     const target = users.find(u => u.username === targetUser);
-
     if (!user || !target) return res.json({ success: false });
 
     const isFollowing = user.following.includes(targetUser);
@@ -88,7 +84,6 @@ app.post('/api/toggle-follow', (req, res) => {
         target.followers.push(username);
         const newNotif = { text: `@${username} seni takip etmeye başladı.`, date: new Date().toLocaleTimeString() };
         target.notifications.unshift(newNotif);
-
         if (activeSockets[targetUser]) {
             io.to(activeSockets[targetUser]).emit('new notification', { notification: newNotif });
         }
@@ -106,7 +101,9 @@ app.get('/api/profile-info', (req, res) => {
         following: user.following,
         followers: user.followers,
         requests: user.requests,
-        notifications: user.notifications
+        notifications: user.notifications,
+        nicknames: user.nicknames || {},
+        besties: user.besties || []
     });
 });
 
@@ -120,15 +117,42 @@ app.post('/api/accept-request', (req, res) => {
         if (!user.friends.includes(requester)) user.friends.push(requester);
         if (!reqUser.friends.includes(username)) reqUser.friends.push(username);
         
-        const newNotif = { text: `@${requester} ile arkadaşlık isteğin onaylandı.`, date: new Date().toLocaleTimeString() };
-        user.notifications.unshift(newNotif);
+        user.notifications.unshift({ text: `@${requester} ile arkadaşlık isteğin onaylandı.`, date: new Date().toLocaleTimeString() });
         reqUser.notifications.unshift({ text: `@${username} arkadaşlık isteğini onayladı!`, date: new Date().toLocaleTimeString() });
 
-        if (activeSockets[requester]) {
-            io.to(activeSockets[requester]).emit('refresh data');
-        }
-
+        if (activeSockets[requester]) io.to(activeSockets[requester]).emit('refresh data');
         res.json({ success: true });
+    } else {
+        res.json({ success: false });
+    }
+});
+
+// Takma Ad (Nickname) Ayarla
+app.post('/api/set-nickname', (req, res) => {
+    const { username, targetUser, nickname } = req.body;
+    const user = users.find(u => u.username === username);
+    if (user) {
+        if (!user.nicknames) user.nicknames = {};
+        user.nicknames[targetUser] = nickname;
+        res.json({ success: true });
+    } else {
+        res.json({ success: false });
+    }
+});
+
+// Kanka Olarak İşaretle / Kaldır
+app.post('/api/toggle-bestie', (req, res) => {
+    const { username, targetUser } = req.body;
+    const user = users.find(u => u.username === username);
+    if (user) {
+        if (!user.besties) user.besties = [];
+        const idx = user.besties.indexOf(targetUser);
+        if (idx > -1) {
+            user.besties.splice(idx, 1);
+        } else {
+            user.besties.push(targetUser);
+        }
+        res.json({ success: true, isBestie: idx === -1 });
     } else {
         res.json({ success: false });
     }
@@ -169,7 +193,6 @@ app.get('/api/archived', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    // Kullanıcı bağlandığında socket id'sini kaydet
     socket.on('register user', (username) => {
         activeSockets[username] = socket.id;
     });
