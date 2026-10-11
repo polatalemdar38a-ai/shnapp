@@ -8,8 +8,7 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// Bellek tabanlı veri yapıları
-const users = []; // { username, password, friends: [], requests: [], following: [], followers: [], archivedRooms: [] }
+const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [] }
 const groups = []; // { id, name, creator, members: [] }
 
 app.post('/api/register', (req, res) => {
@@ -22,6 +21,7 @@ app.post('/api/register', (req, res) => {
         password,
         friends: [],
         requests: [],
+        notifications: [],
         following: [],
         followers: [],
         archivedRooms: []
@@ -39,7 +39,6 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// Kullanıcı Arama
 app.get('/api/search', (req, res) => {
     const query = req.query.q || '';
     const currentUser = req.query.user || '';
@@ -49,42 +48,19 @@ app.get('/api/search', (req, res) => {
     res.json(results);
 });
 
-// Arkadaşlık İsteği Gönder (Onay Bekler)
+// Arkadaşlık & Takip İsteği Gönder
 app.post('/api/send-request', (req, res) => {
     const { username, targetUser } = req.body;
     const target = users.find(u => u.username === targetUser);
     if (!target) return res.json({ success: false, message: "Kullanıcı bulunamadı!" });
-    if (target.requests.includes(username)) return res.json({ success: false, message: "Zaten istek gönderilmiş!" });
+    if (target.requests.some(r => r.from === username)) return res.json({ success: false, message: "Zaten istek gönderilmiş!" });
     if (target.friends.includes(username)) return res.json({ success: false, message: "Zaten arkadaşsınız!" });
 
-    target.requests.push(username);
+    target.requests.push({ from: username, type: 'friend' });
+    target.notifications.unshift({ text: `@${username} sana arkadaşlık isteği gönderdi.`, date: new Date().toLocaleTimeString() });
     res.json({ success: true });
 });
 
-// Bekleyen İstekleri Listele
-app.get('/api/requests', (req, res) => {
-    const username = req.query.user;
-    const user = users.find(u => u.username === username);
-    res.json(user ? user.requests : []);
-});
-
-// Arkadaşlık İsteğini Kabul Et
-app.post('/api/accept-request', (req, res) => {
-    const { username, requester } = req.body;
-    const user = users.find(u => u.username === username);
-    const reqUser = users.find(u => u.username === requester);
-
-    if (user && reqUser) {
-        user.requests = user.requests.filter(r => r !== requester);
-        if (!user.friends.includes(requester)) user.friends.push(requester);
-        if (!reqUser.friends.includes(username)) reqUser.friends.push(username);
-        res.json({ success: true });
-    } else {
-        res.json({ success: false });
-    }
-});
-
-// Takip Et / Takipten Çık (Follow / Unfollow)
 app.post('/api/toggle-follow', (req, res) => {
     const { username, targetUser } = req.body;
     const user = users.find(u => u.username === username);
@@ -99,11 +75,11 @@ app.post('/api/toggle-follow', (req, res) => {
     } else {
         user.following.push(targetUser);
         target.followers.push(username);
+        target.notifications.unshift({ text: `@${username} seni takip etmeye başladı.`, date: new Date().toLocaleTimeString() });
     }
     res.json({ success: true, isFollowing: !isFollowing });
 });
 
-// Profil Detayları (Takipçi/Takip Edilen)
 app.get('/api/profile-info', (req, res) => {
     const username = req.query.user;
     const user = users.find(u => u.username === username);
@@ -113,11 +89,27 @@ app.get('/api/profile-info', (req, res) => {
         friends: user.friends,
         following: user.following,
         followers: user.followers,
-        requests: user.requests
+        requests: user.requests,
+        notifications: user.notifications
     });
 });
 
-// Grup Oluştur
+app.post('/api/accept-request', (req, res) => {
+    const { username, requester } = req.body;
+    const user = users.find(u => u.username === username);
+    const reqUser = users.find(u => u.username === requester);
+
+    if (user && reqUser) {
+        user.requests = user.requests.filter(r => r.from !== requester);
+        if (!user.friends.includes(requester)) user.friends.push(requester);
+        if (!reqUser.friends.includes(username)) reqUser.friends.push(username);
+        user.notifications.unshift({ text: `@${requester} ile arkadaşlık isteğini onayladın.`, date: new Date().toLocaleTimeString() });
+        res.json({ success: true });
+    } else {
+        res.json({ success: false });
+    }
+});
+
 app.post('/api/create-group', (req, res) => {
     const { groupName, creator, members } = req.body;
     if (!groupName) return res.json({ success: false, message: "Grup adı gerekli!" });
@@ -131,14 +123,12 @@ app.post('/api/create-group', (req, res) => {
     res.json({ success: true, groupId, groupName });
 });
 
-// Kullanıcının Gruplarını Getir
 app.get('/api/user-groups', (req, res) => {
     const username = req.query.user;
     const userGroups = groups.filter(g => g.members.includes(username));
     res.json(userGroups);
 });
 
-// Sohbet Arşivleme
 app.post('/api/archive', (req, res) => {
     const { username, roomId } = req.body;
     const user = users.find(u => u.username === username);
@@ -154,7 +144,6 @@ app.get('/api/archived', (req, res) => {
     res.json(user ? user.archivedRooms : []);
 });
 
-// Socket.io Haberleşme
 io.on('connection', (socket) => {
     socket.on('join room', (room) => {
         socket.join(room);

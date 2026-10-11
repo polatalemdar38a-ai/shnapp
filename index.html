@@ -3,146 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BlueChat App</title>
-    <!-- Telefona Ana Ekran Simgesi Ekleme (PWA Manifest ve Meta Etiketleri) -->
+    <title>LuxeChat - Premium Messenger</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f172a">
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22BlueChat%22%2C%22short_name%22%3A%22BlueChat%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%232563eb%22%7D">
+    <meta name="theme-color" content="#030712">
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22LuxeChat%22%2C%22short_name%22%3A%22LuxeChat%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%233b82f6%22%7D">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #030712; }
+        ::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 4px; }
+        .glass-panel { background: rgba(10, 15, 30, 0.75); backdrop-filter: blur(16px); }
+        .luxury-shadow { box-shadow: 0 0 40px rgba(37, 99, 235, 0.12); }
     </style>
 </head>
-<body class="bg-black text-white h-screen flex justify-center items-center overflow-hidden font-sans">
+<body class="bg-black text-gray-100 h-screen flex justify-center items-center overflow-hidden font-sans">
 
     <!-- Giriş / Kayıt Ekranı -->
-    <div class="w-full max-w-sm bg-gray-950 p-8 rounded-3xl shadow-2xl border border-blue-900/40" id="auth-container">
+    <div class="w-full max-w-sm glass-panel border border-blue-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
-            <div class="w-14 h-14 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-600/30 mb-3">BC</div>
-            <h1 class="text-2xl font-extrabold tracking-wide text-white">BlueChat</h1>
-            <p class="text-xs text-gray-400 mt-1">Telefon ana ekranına ekleyebilirsin</p>
+            <div class="w-16 h-16 bg-gradient-to-tr from-blue-700 to-indigo-500 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-blue-600/30 mb-3">💎</div>
+            <h1 class="text-2xl font-extrabold tracking-wider text-white">LUXE CHAT</h1>
+            <p class="text-xs text-blue-400 mt-1 font-medium">Seçkin ve Şık Mesajlaşma Deneyimi</p>
         </div>
         
-        <div class="flex mb-6 bg-gray-900 p-1 rounded-xl border border-gray-800">
-            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-blue-600 text-white transition">Giriş</button>
+        <div class="flex mb-6 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
+            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-blue-600 text-white transition shadow">Giriş</button>
             <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition">Kayıt</button>
         </div>
 
         <div id="login-form" class="space-y-4">
-            <input type="text" id="login-username" placeholder="Kullanıcı adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-white placeholder-gray-600">
-            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-white placeholder-gray-600">
-            <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/25">Giriş Yap</button>
+            <input type="text" id="login-username" placeholder="Kullanıcı adı" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 text-white placeholder-gray-500">
+            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 text-white placeholder-gray-500">
+            <button onclick="login()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/30 text-xs uppercase tracking-wider">Giriş Yap</button>
         </div>
 
         <div id="register-form" class="space-y-4 hidden">
-            <input type="text" id="reg-username" placeholder="Kullanıcı adı seç" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-white placeholder-gray-600">
-            <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-white placeholder-gray-600">
-            <button onclick="register()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/25">Kayıt Ol</button>
+            <input type="text" id="reg-username" placeholder="Kullanıcı adı seç" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 text-white placeholder-gray-500">
+            <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-blue-500 text-white placeholder-gray-500">
+            <button onclick="register()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-600/30 text-xs uppercase tracking-wider">Kayıt Ol</button>
         </div>
         
         <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
     </div>
 
     <!-- Ana Sohbet Arayüzü -->
-    <div id="chat-container" class="w-full max-w-5xl h-[92vh] bg-black rounded-3xl shadow-2xl border border-blue-900/30 hidden flex overflow-hidden">
+    <div id="chat-container" class="w-full max-w-5xl h-[92vh] glass-panel rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
         
         <!-- Sol Panel -->
-        <div class="w-80 bg-gray-950 border-r border-gray-900 flex flex-col">
-            <!-- Üst Bar ve İşlem Simgeleri (Arama ve Artı) -->
-            <div class="p-4 border-b border-gray-900 flex justify-between items-center bg-gray-900/40">
+        <div class="w-80 bg-gray-950/90 border-r border-gray-900 flex flex-col">
+            <!-- Üst Bar ve İşlem Simgeleri -->
+            <div class="p-4 border-b border-gray-900 flex justify-between items-center bg-gray-900/30">
                 <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm" id="profile-initial">B</div>
-                    <span id="current-username" class="font-bold text-sm text-white">Kullanıcı</span>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-600/20" id="profile-initial">L</div>
+                    <div>
+                        <span id="current-username" class="font-bold text-xs text-white block">Kullanıcı</span>
+                        <span class="text-[9px] text-blue-400 font-semibold tracking-wider">● Çevrimiçi</span>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <!-- Arama Simgesi -->
-                    <button onclick="openSearchModal()" class="w-8 h-8 rounded-full bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-xs" title="Kişi Ara & Ekle">🔍</button>
-                    <!-- Artı Simgesi (Grup Kurma) -->
-                    <button onclick="openGroupModal()" class="w-8 h-8 rounded-full bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-sm font-bold" title="Grup Oluştur">+</button>
-                    <button onclick="logout()" class="text-xs text-gray-400 hover:text-red-400 bg-gray-900 px-2.5 py-1.5 rounded-lg transition">Çıkış</button>
+                <div class="flex items-center space-x-1.5">
+                    <button onclick="openSearchModal()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-xs border border-gray-800" title="Kişi Ara & Ekle">🔍</button>
+                    <button onclick="openGroupModal()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-sm font-bold border border-gray-800" title="Grup Kur">+</button>
+                    <button onclick="openNotificationsModal()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-xs border border-gray-800 relative" title="Bildirimler">
+                        🔔
+                        <span id="notif-badge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full hidden"></span>
+                    </button>
+                    <button onclick="logout()" class="text-[10px] text-gray-400 hover:text-red-400 bg-gray-900 px-2 py-1.5 rounded-xl transition border border-gray-800">Çıkış</button>
                 </div>
             </div>
 
-            <!-- Bildirim Alanı -->
-            <div id="notification-bar" class="hidden bg-blue-600/20 border-b border-blue-500/30 px-4 py-2 flex justify-between items-center text-xs text-blue-300">
-                <span id="notif-text">Yeni bildirim var!</span>
-                <button onclick="closeNotif()" class="font-bold">✕</button>
-            </div>
+            <!-- Ana Menü: Arkadaşlarım ve Gruplarım -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-4">
+                <div>
+                    <div class="text-[10px] font-bold text-blue-400 px-2 uppercase tracking-widest mb-2">Arkadaşlarım</div>
+                    <div id="friends-list" class="space-y-1"></div>
+                </div>
 
-            <!-- Sohbet Listesi / DM ve Gruplar -->
-            <div class="flex-1 overflow-y-auto p-2 space-y-1">
-                <div class="text-[10px] font-bold text-gray-500 px-3 uppercase tracking-wider mb-1 mt-2">Özel Sohbetler & Gruplar</div>
-                <div id="chats-list" class="space-y-1"></div>
+                <div>
+                    <div class="text-[10px] font-bold text-indigo-400 px-2 uppercase tracking-widest mb-2">Gruplarım</div>
+                    <div id="groups-list" class="space-y-1"></div>
+                </div>
 
-                <div class="text-[10px] font-bold text-gray-500 px-3 uppercase tracking-wider mb-1 mt-4">Arşivlenenler</div>
-                <div id="archived-list" class="space-y-1"></div>
+                <div>
+                    <div class="text-[10px] font-bold text-gray-500 px-2 uppercase tracking-widest mb-2">Arşivlenenler</div>
+                    <div id="archived-list" class="space-y-1"></div>
+                </div>
             </div>
         </div>
 
         <!-- Sağ Ana Sohbet Alanı -->
-        <div class="flex-1 flex flex-col bg-black">
-            <!-- Sohbet Başlığı ve Arşivle Butonu -->
-            <div class="px-6 py-4 border-b border-gray-900 bg-gray-950 flex items-center justify-between">
+        <div class="flex-1 flex flex-col bg-black/40">
+            <!-- Sohbet Başlığı -->
+            <div class="px-6 py-4 border-b border-gray-900/80 bg-gray-950/60 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 rounded-full bg-blue-600/30 border border-blue-500 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">💬</div>
+                    <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">💎</div>
                     <div>
                         <h3 id="active-room-title" class="font-bold text-sm text-white">Sohbet Seçin</h3>
-                        <span class="text-[10px] text-gray-500" id="active-room-sub">Sol menüden bir sohbet seçin</span>
+                        <span class="text-[10px] text-gray-400" id="active-room-sub">Sol menüden bir arkadaşınıza veya gruba tıklayın</span>
                     </div>
                 </div>
                 <div id="chat-actions" class="hidden flex items-center space-x-2">
-                    <button onclick="archiveCurrentRoom()" class="bg-gray-900 hover:bg-gray-800 text-xs px-3 py-1.5 rounded-xl border border-gray-800 text-gray-300 transition">📂 Arşivle</button>
+                    <button onclick="archiveCurrentRoom()" class="bg-gray-900 hover:bg-gray-800 text-xs px-3 py-1.5 rounded-xl border border-gray-800 text-gray-300 transition shadow">📂 Arşivle</button>
                 </div>
             </div>
 
             <!-- Mesaj Listesi -->
-            <ul id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-black text-sm"></ul>
+            <ul id="messages" class="flex-1 overflow-y-auto p-6 space-y-3 bg-black/20 text-sm"></ul>
 
             <!-- Mesaj Gönderme Formu -->
-            <form id="chat-form" onsubmit="sendMessage(event)" class="p-4 border-t border-gray-900 bg-gray-950 flex items-center gap-3">
-                <input id="m" autocomplete="off" placeholder="Mesaj yaz..." class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-2xl text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-600" />
-                <button class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-5 py-3 rounded-2xl transition text-xs uppercase tracking-wider shadow-lg shadow-blue-600/20">Gönder</button>
+            <form id="chat-form" onsubmit="sendMessage(event)" class="p-4 border-t border-gray-900/80 bg-gray-950/60 flex items-center gap-3">
+                <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-2xl text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500" />
+                <button class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-5 py-3 rounded-2xl transition text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30">Gönder</button>
             </form>
         </div>
     </div>
 
-    <!-- MODAL: Arama ve Kişi Ekleme / Onay / Takipleşme -->
-    <div id="search-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex justify-center items-center z-50">
-        <div class="w-full max-w-md bg-gray-950 border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
+    <!-- MODAL: Arama ve Kişi Ekleme / Takipleşme -->
+    <div id="search-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50">
+        <div class="w-full max-w-md glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-base">Kişi Ara ve Ekle</h3>
+                <h3 class="font-bold text-white text-sm">Kişi Ara & Takip Et</h3>
                 <button onclick="closeSearchModal()" class="text-gray-400 hover:text-white font-bold">✕</button>
             </div>
-            <input type="text" id="modal-search-input" oninput="performSearch()" placeholder="Kullanıcı adı ara..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 mb-3">
+            <input type="text" id="modal-search-input" oninput="performSearch()" placeholder="Kullanıcı adı ara..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 mb-4">
             
-            <div id="incoming-requests-section" class="mb-4">
-                <h4 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Bekleyen Arkadaşlık İstekleri</h4>
-                <div id="requests-list" class="space-y-2 max-h-28 overflow-y-auto"></div>
-            </div>
-
-            <div class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Arama Sonuçları</div>
-            <div id="modal-search-results" class="space-y-2 max-h-48 overflow-y-auto"></div>
+            <div class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Arama Sonuçları</div>
+            <div id="modal-search-results" class="space-y-2 max-h-60 overflow-y-auto"></div>
         </div>
     </div>
 
-    <!-- MODAL: Grup Sohbeti Oluştur -->
-    <div id="group-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex justify-center items-center z-50">
-        <div class="w-full max-w-md bg-gray-950 border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
+    <!-- MODAL: Bildirimler ve İstekler -->
+    <div id="notifications-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50">
+        <div class="w-full max-w-md glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-base">Grup Sohbeti Oluştur</h3>
+                <h3 class="font-bold text-white text-sm">Bildirimler & İstekler</h3>
+                <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-white font-bold">✕</button>
+            </div>
+            
+            <div class="mb-4">
+                <h4 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Bekleyen Arkadaşlık İstekleri</h4>
+                <div id="requests-list" class="space-y-2 max-h-32 overflow-y-auto mb-4"></div>
+            </div>
+
+            <div>
+                <h4 class="text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Bildirim Geçmişi</h4>
+                <div id="notifications-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Grup Kurma -->
+    <div id="group-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50">
+        <div class="w-full max-w-md glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-white text-sm">Grup Sohbeti Oluştur</h3>
                 <button onclick="closeGroupModal()" class="text-gray-400 hover:text-white font-bold">✕</button>
             </div>
             <input type="text" id="group-name-input" placeholder="Grup Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 mb-4">
             
-            <h4 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Arkadaşlarını Seç</h4>
-            <div id="group-friends-checkboxes" class="space-y-2 max-h-40 overflow-y-auto mb-4 bg-gray-900 p-3 rounded-xl border border-gray-800"></div>
+            <h4 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Arkadaşlarını Seç</h4>
+            <div id="group-friends-checkboxes" class="space-y-2 max-h-40 overflow-y-auto mb-4 bg-gray-900/60 p-3 rounded-xl border border-gray-800"></div>
 
-            <button onclick="createGroup()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Grubu Kur</button>
+            <button onclick="createGroup()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30">Grubu Oluştur</button>
         </div>
     </div>
 
@@ -151,8 +175,6 @@
         let currentRoom = "";
         let socket;
         let friends = [];
-        let following = [];
-        let followers = [];
         let archived = [];
 
         function switchTab(tab) {
@@ -164,12 +186,12 @@
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
                 regForm.classList.add('hidden');
-                tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-blue-600 text-white transition";
+                tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-blue-600 text-white transition shadow";
                 tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
             } else {
                 regForm.classList.remove('hidden');
                 loginForm.classList.add('hidden');
-                tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-blue-600 text-white transition";
+                tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-blue-600 text-white transition shadow";
                 tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
             }
             document.getElementById('auth-msg').innerText = "";
@@ -218,8 +240,6 @@
                 socket.on('chat message', function(data) {
                     if (data.room === currentRoom) {
                         appendMessage(data);
-                    } else {
-                        showNotification(`Yeni mesaj: ${data.sender}`);
                     }
                 });
 
@@ -234,51 +254,51 @@
             const data = await res.json();
             if (data.success) {
                 friends = data.friends;
-                following = data.following;
-                followers = data.followers;
                 
                 const archRes = await fetch(`/api/archived?user=${currentUser}`);
                 archived = await archRes.json();
 
-                renderChatsList();
-                renderRequests(data.requests);
+                renderMainLists();
+                renderNotifications(data.requests, data.notifications);
             }
         }
 
-        async function renderChatsList() {
-            const listEl = document.getElementById('chats-list');
+        async function renderMainLists() {
+            const friendsEl = document.getElementById('friends-list');
+            const groupsEl = document.getElementById('groups-list');
             const archEl = document.getElementById('archived-list');
-            listEl.innerHTML = "";
+            friendsEl.innerHTML = "";
+            groupsEl.innerHTML = "";
             archEl.innerHTML = "";
 
-            // DM'ler (Onaylanmış arkadaşlar)
+            // Arkadaşlarım
             friends.forEach(f => {
                 const roomName = [currentUser, f].sort().join('_');
                 const isArchived = archived.includes(roomName);
-                const item = createChatListItem(f, 'Özel Mesaj', roomName, '👤');
+                const item = createListItem(f, 'Özel Sohbet (DM)', roomName, '👤');
                 if (isArchived) archEl.appendChild(item);
-                else listEl.appendChild(item);
+                else friendsEl.appendChild(item);
             });
 
-            // Gruplar
+            // Gruplarım
             const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
             const groups = await groupRes.json();
             groups.forEach(g => {
                 const isArchived = archived.includes(g.id);
-                const item = createChatListItem(g.name, 'Grup Sohbeti', g.id, '👥');
+                const item = createListItem(g.name, 'Grup Sohbeti', g.id, '👥');
                 if (isArchived) archEl.appendChild(item);
-                else listEl.appendChild(item);
+                else groupsEl.appendChild(item);
             });
         }
 
-        function createChatListItem(name, sub, roomName, icon) {
+        function createListItem(name, sub, roomName, icon) {
             const div = document.createElement('div');
-            div.className = "p-3 rounded-2xl cursor-pointer hover:bg-gray-900 text-white flex items-center space-x-3 transition border border-transparent hover:border-gray-800";
+            div.className = "p-3 rounded-2xl cursor-pointer hover:bg-blue-600/10 text-white flex items-center space-x-3 transition border border-transparent hover:border-blue-500/30";
             div.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-bold text-sm text-blue-400">${icon}</div>
+                <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-bold text-xs text-blue-400">${icon}</div>
                 <div class="flex-1 min-w-0">
                     <h4 class="text-xs font-bold truncate">${name}</h4>
-                    <p class="text-[10px] text-gray-500 truncate">${sub}</p>
+                    <p class="text-[10px] text-gray-400 truncate">${sub}</p>
                 </div>
             `;
             div.onclick = () => selectRoom(roomName, name);
@@ -307,14 +327,25 @@
             document.getElementById('chat-actions').classList.add('hidden');
         }
 
-        // Arama ve Arkadaş Ekleme Modalı
-        function openSearchModal() {
-            document.getElementById('search-modal').classList.remove('hidden');
-            refreshData();
+        // Modallar
+        function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
+        function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
+        function openNotificationsModal() { document.getElementById('notifications-modal').classList.remove('hidden'); refreshData(); }
+        function closeNotificationsModal() { document.getElementById('notifications-modal').classList.add('hidden'); }
+        function openGroupModal() {
+            document.getElementById('group-modal').classList.remove('hidden');
+            const box = document.getElementById('group-friends-checkboxes');
+            box.innerHTML = "";
+            friends.forEach(f => {
+                box.innerHTML += `
+                    <label class="flex items-center space-x-2 text-xs cursor-pointer">
+                        <input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-900 border-gray-700 text-blue-600">
+                        <span>@${f}</span>
+                    </label>
+                `;
+            });
         }
-        function closeSearchModal() {
-            document.getElementById('search-modal').classList.add('hidden');
-        }
+        function closeGroupModal() { document.getElementById('group-modal').classList.add('hidden'); }
 
         async function performSearch() {
             const query = document.getElementById('modal-search-input').value;
@@ -325,14 +356,13 @@
 
             usersList.forEach(u => {
                 const isFriend = friends.includes(u.username);
-                const isFollowing = following.includes(u.username);
                 const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-gray-900 px-3 py-2.5 rounded-xl text-xs text-white border border-gray-800";
+                div.className = "flex justify-between items-center bg-gray-900/80 px-3 py-2.5 rounded-xl text-xs text-white border border-gray-800";
                 div.innerHTML = `
                     <span>@${u.username}</span>
-                    <div class="flex gap-1">
-                        <button onclick="toggleFollow('${u.username}')" class="bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded-lg text-[10px] font-semibold">${isFollowing ? 'Takipten Çık' : 'Takip Et'}</button>
-                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-green-400 font-semibold text-[10px] self-center">Arkadaşsınız</span>'}
+                    <div class="flex gap-1.5">
+                        <button onclick="toggleFollow('${u.username}')" class="bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded-lg text-[10px] font-semibold">Takip Et</button>
+                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-green-400 font-semibold text-[10px] self-center">Arkadaşsın</span>'}
                     </div>
                 `;
                 resultsEl.appendChild(div);
@@ -349,21 +379,44 @@
             alert(data.success ? "Arkadaşlık isteği gönderildi!" : data.message);
         }
 
-        async function renderRequests(reqs) {
+        async function toggleFollow(targetUser) {
+            await fetch('/api/toggle-follow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, targetUser })
+            });
+            alert("Takip isteği/işlemi başarılı!");
+        }
+
+        async function renderNotifications(reqs, notifs) {
             const reqList = document.getElementById('requests-list');
+            const notifList = document.getElementById('notifications-list');
+            const badge = document.getElementById('notif-badge');
             reqList.innerHTML = "";
-            if (reqs.length === 0) {
-                reqList.innerHTML = `<p class="text-[10px] text-gray-500">Bekleyen istek yok.</p>`;
-                return;
+            notifList.innerHTML = "";
+
+            if (reqs.length > 0 || notifs.length > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
             }
+
             reqs.forEach(req => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white";
-                div.innerHTML = `
-                    <span>@${req}</span>
-                    <button onclick="acceptRequest('${req}')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
+                reqList.innerHTML += `
+                    <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white">
+                        <span>@${req.from}</span>
+                        <button onclick="acceptRequest('${req.from}')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
+                    </div>
                 `;
-                reqList.appendChild(div);
+            });
+
+            notifs.forEach(n => {
+                notifList.innerHTML += `
+                    <div class="bg-gray-900/60 px-3 py-2 rounded-xl text-xs text-gray-300 border border-gray-800 flex justify-between">
+                        <span>${n.text}</span>
+                        <span class="text-[9px] text-gray-500">${n.date}</span>
+                    </div>
+                `;
             });
         }
 
@@ -374,34 +427,7 @@
                 body: JSON.stringify({ username: currentUser, requester })
             });
             refreshData();
-            openSearchModal();
-        }
-
-        async function toggleFollow(targetUser) {
-            await fetch('/api/toggle-follow', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser })
-            });
-            performSearch();
-        }
-
-        // Grup Kurma Modalı
-        function openGroupModal() {
-            document.getElementById('group-modal').classList.remove('hidden');
-            const box = document.getElementById('group-friends-checkboxes');
-            box.innerHTML = "";
-            friends.forEach(f => {
-                box.innerHTML += `
-                    <label class="flex items-center space-x-2 text-xs cursor-pointer">
-                        <input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-800 border-gray-700 text-blue-600">
-                        <span>@${f}</span>
-                    </label>
-                `;
-            });
-        }
-        function closeGroupModal() {
-            document.getElementById('group-modal').classList.add('hidden');
+            openNotificationsModal();
         }
 
         async function createGroup() {
@@ -424,19 +450,7 @@
             }
         }
 
-        function showNotification(text) {
-            const bar = document.getElementById('notification-bar');
-            document.getElementById('notif-text').innerText = text;
-            bar.classList.remove('hidden');
-            setTimeout(() => bar.classList.add('hidden'), 4000);
-        }
-        function closeNotif() {
-            document.getElementById('notification-bar').classList.add('hidden');
-        }
-
-        function logout() {
-            location.reload();
-        }
+        function logout() { location.reload(); }
 
         function sendMessage(e) {
             e.preventDefault();
@@ -456,7 +470,7 @@
             const isMe = data.sender === currentUser;
             item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
             item.innerHTML = `
-                <div class="max-w-[70%] px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-blue-600 text-white font-medium rounded-br-xs shadow-lg shadow-blue-600/20' : 'bg-gray-900 text-gray-200 rounded-bl-xs border border-gray-800'}">
+                <div class="max-w-[70%] px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-br-xs shadow-lg shadow-blue-600/20' : 'bg-gray-900 text-gray-200 rounded-bl-xs border border-gray-800'}">
                     ${!isMe ? `<span class="block text-[10px] text-blue-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
                     ${data.text}
                 </div>
