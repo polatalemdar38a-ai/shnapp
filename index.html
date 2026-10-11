@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LuxeChat - Premium Messenger</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,9 +17,16 @@
         ::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 4px; }
         .glass-panel { background: rgba(8, 12, 24, 0.95); backdrop-filter: blur(16px); }
         .luxury-shadow { box-shadow: 0 0 40px rgba(37, 99, 235, 0.12); }
+        
+        /* Mobil klavye açıldığında esnekliği korumak için */
+        html, body {
+            height: 100%;
+            height: -webkit-fill-available;
+            overflow: hidden;
+        }
     </style>
 </head>
-<body class="bg-black text-gray-100 h-screen flex justify-center items-center overflow-hidden font-sans">
+<body class="bg-black text-gray-100 h-[100dvh] flex justify-center items-center font-sans">
 
     <!-- PWA Install Banner -->
     <div id="pwa-install-banner" class="fixed top-4 left-4 right-4 max-w-md mx-auto bg-blue-600 text-white p-4 rounded-2xl shadow-2xl z-50 hidden flex justify-between items-center border border-blue-400">
@@ -65,7 +72,7 @@
     </div>
 
     <!-- Ana Sohbet Arayüzü -->
-    <div id="chat-container" class="w-full max-w-5xl h-[95vh] md:h-[92vh] glass-panel rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
+    <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92dvh] glass-panel md:rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
         
         <!-- Sol Panel -->
         <div id="sidebar" class="w-full md:w-80 bg-gray-950/95 border-r border-gray-900 flex flex-col h-full">
@@ -106,21 +113,21 @@
             </div>
         </div>
 
-        <!-- Sağ Ana Sohbet Alanı -->
-        <div id="chat-pane" class="hidden md:flex flex-1 flex-col bg-black/40 h-full relative bg-cover bg-center" id="chat-pane-bg">
-            <!-- Üst Bar: Kişi/Grup Adına Dokununca Menü Açılır -->
-            <div class="px-4 md:px-6 py-3.5 border-b border-gray-900/80 bg-gray-950/90 flex items-center justify-between">
+        <!-- Sağ Ana Sohbet Alanı (Klavye açıldığında esneyen yapı) -->
+        <div id="chat-pane" class="hidden md:flex flex-1 flex-col justify-between bg-black/40 h-full relative bg-cover bg-center">
+            
+            <!-- Üst Bar -->
+            <div class="px-4 md:px-6 py-3.5 border-b border-gray-900/80 bg-gray-950/90 flex items-center justify-between shrink-0">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-blue-400 font-bold text-lg mr-1">←</button>
                     <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">💎</div>
                     <div>
-                        <!-- Başlığa tıklayınca özel sohbet menüsü açılır -->
                         <h3 id="active-room-title" onclick="toggleHeaderMenu()" class="font-bold text-sm text-white flex items-center gap-1.5 cursor-pointer hover:text-blue-400 transition" title="Seçenekler için tıkla">Sohbet Seçin ▾</h3>
                         <span class="text-[10px] text-gray-400" id="active-room-sub">Sol menüden tıklayın</span>
                     </div>
                 </div>
 
-                <!-- Başlık Altı Açılır Menü (Kişi Adına Basınca) -->
+                <!-- Başlık Altı Açılır Menü -->
                 <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-gray-950 border border-blue-900/40 rounded-2xl shadow-2xl py-2 z-50 hidden">
                     <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-blue-600/20 hover:text-white flex items-center gap-2">📂 Sohbeti Arşivle</button>
                     <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-600/20 flex items-center gap-2">🗑️ Sohbeti Sil</button>
@@ -135,8 +142,8 @@
             <!-- Mesaj Listesi -->
             <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-black/20 text-sm"></ul>
 
-            <!-- Mesaj Gönderme Çubuğu (En Altta, Ses ve Resim Butonlarıyla) -->
-            <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/90 flex items-center gap-2 md:gap-3">
+            <!-- Mesaj Gönderme Çubuğu (Klavyenin tam üzerine oturur) -->
+            <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/95 flex items-center gap-2 md:gap-3 shrink-0 sticky bottom-0">
                 <label class="w-10 h-10 rounded-2xl bg-gray-900 hover:bg-gray-800 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition shrink-0" title="Resim Gönder">
                     📷
                     <input type="file" accept="image/*" onchange="sendImage(event)" class="hidden">
@@ -196,7 +203,6 @@
         </div>
     </div>
 
-    <!-- MODAL: Takma Ad Değiştir -->
     <div id="nickname-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-sm glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -328,347 +334,4 @@
                 }
             });
 
-            socket.on('new notification', function() {
-                document.getElementById('notif-badge').classList.remove('hidden');
-                refreshData();
-            });
-
-            socket.on('refresh data', function() {
-                refreshData();
-            });
-
-            refreshData();
-        }
-
-        async function refreshData() {
-            const res = await fetch(`/api/profile-info?user=${currentUser}`);
-            const data = await res.json();
-            if (data.success) {
-                friends = data.friends;
-                following = data.following;
-                nicknames = data.nicknames || {};
-                const archRes = await fetch(`/api/archived?user=${currentUser}`);
-                archived = await archRes.json();
-
-                renderMainLists();
-                renderNotifications(data.requests, data.notifications);
-            }
-        }
-
-        async function renderMainLists() {
-            const friendsEl = document.getElementById('friends-list');
-            const groupsEl = document.getElementById('groups-list');
-            const archEl = document.getElementById('archived-list');
-            friendsEl.innerHTML = "";
-            groupsEl.innerHTML = "";
-            archEl.innerHTML = "";
-
-            friends.forEach(f => {
-                const roomName = [currentUser, f].sort().join('_');
-                const isArchived = archived.includes(roomName);
-                const hasUnread = unreadRooms[roomName];
-                const displayName = nicknames[f] || f;
-                const item = createListItem(displayName, 'Özel Sohbet (DM)', roomName, '👤', hasUnread, f);
-                if (isArchived) archEl.appendChild(item);
-                else friendsEl.appendChild(item);
-            });
-
-            const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
-            const groups = await groupRes.json();
-            groups.forEach(g => {
-                const isArchived = archived.includes(g.id);
-                const hasUnread = unreadRooms[g.id];
-                const item = createListItem(g.name, 'Grup Sohbeti', g.id, '👥', hasUnread, null);
-                if (isArchived) archEl.appendChild(item);
-                else groupsEl.appendChild(item);
-            });
-        }
-
-        function createListItem(name, sub, roomName, icon, hasUnread, rawName) {
-            const div = document.createElement('div');
-            div.className = "p-3 rounded-2xl cursor-pointer hover:bg-blue-600/10 text-white flex items-center justify-between transition border border-transparent hover:border-blue-500/30";
-            div.innerHTML = `
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-bold text-xs text-blue-400 shrink-0">${icon}</div>
-                    <div class="min-w-0">
-                        <h4 class="text-xs font-bold truncate">${name}</h4>
-                        <p class="text-[10px] text-gray-400 truncate">${sub}</p>
-                    </div>
-                </div>
-                ${hasUnread ? '<span class="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 shadow-lg shadow-blue-500/50 animate-pulse"></span>' : ''}
-            `;
-            // Mobil ve masaüstünde dokununca/tıklayınca doğrudan açılması için ontouchstart ve onclick
-            div.onclick = () => selectRoom(roomName, name, rawName);
-            div.ontouchstart = () => selectRoom(roomName, name, rawName);
-            return div;
-        }
-
-        function selectRoom(room, name, rawName) {
-            currentRoom = room;
-            activeFriendName = rawName;
-            unreadRooms[room] = false;
-            localStorage.setItem('luxe_unread', JSON.stringify(unreadRooms));
-            
-            document.getElementById('active-room-title').innerHTML = `${name} ▾`;
-            document.getElementById('active-room-sub').innerText = rawName ? `@${rawName}` : 'Grup Odası';
-            document.getElementById('messages').innerHTML = "";
-            
-            document.getElementById('chat-pane').classList.remove('hidden');
-            if(window.innerWidth < 768) {
-                document.getElementById('sidebar').classList.add('hidden');
-            }
-
-            socket.emit('join room', room);
-            refreshData();
-        }
-
-        function closeChatPane() {
-            document.getElementById('chat-pane').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('hidden');
-            currentRoom = "";
-            activeFriendName = "";
-            document.getElementById('header-dropdown').classList.add('hidden');
-        }
-
-        function toggleHeaderMenu() {
-            if (!activeFriendName) return; // Sadece DM'lerde menü açılsın
-            const dropdown = document.getElementById('header-dropdown');
-            dropdown.classList.toggle('hidden');
-        }
-
-        async function archiveCurrentRoom() {
-            if (!currentRoom) return;
-            await fetch('/api/archive', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, roomId: currentRoom })
-            });
-            toggleHeaderMenu();
-            refreshData();
-            closeChatPane();
-        }
-
-        function clearOrDeleteChat() {
-            document.getElementById('messages').innerHTML = "";
-            toggleHeaderMenu();
-            alert("Sohbet temizlendi.");
-        }
-
-        function openNicknameModal() {
-            toggleHeaderMenu();
-            document.getElementById('nickname-modal').classList.remove('hidden');
-            document.getElementById('nickname-input').value = nicknames[activeFriendName] || "";
-        }
-        function closeNicknameModal() {
-            document.getElementById('nickname-modal').classList.add('hidden');
-        }
-
-        async function saveNickname() {
-            const nickname = document.getElementById('nickname-input').value.trim();
-            const res = await fetch('/api/set-nickname', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser: activeFriendName, nickname })
-            });
-            const data = await res.json();
-            if (data.success) {
-                closeNicknameModal();
-                refreshData();
-                document.getElementById('active-room-title').innerHTML = `${nickname || activeFriendName} ▾`;
-            }
-        }
-
-        function changeChatTheme(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const chatPane = document.getElementById('chat-pane');
-                    chatPane.style.backgroundImage = `url('${e.target.result}')`;
-                    chatPane.style.backgroundSize = 'cover';
-                    chatPane.style.backgroundPosition = 'center';
-                }
-                reader.readAsDataURL(file);
-            }
-            toggleHeaderMenu();
-        }
-
-        function recordVoice() {
-            sendCustomMessage("🎤 [Sesli Mesaj]");
-        }
-
-        function sendImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                sendCustomMessage(`📷 [Resim: ${file.name}]`);
-            }
-        }
-
-        function sendCustomMessage(text) {
-            if (currentRoom) {
-                const messageData = { room: currentRoom, sender: currentUser, text: text };
-                appendMessage(messageData);
-                socket.emit('chat message', messageData);
-            }
-        }
-
-        function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
-        function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
-        function openNotificationsModal() {
-            document.getElementById('notifications-modal').classList.remove('hidden');
-            document.getElementById('notif-badge').classList.add('hidden');
-            refreshData();
-        }
-        function closeNotificationsModal() { document.getElementById('notifications-modal').classList.add('hidden'); }
-        
-        function openGroupModal() {
-            document.getElementById('group-modal').classList.remove('hidden');
-            const box = document.getElementById('group-friends-checkboxes');
-            box.innerHTML = "";
-            friends.forEach(f => {
-                box.innerHTML += `
-                    <label class="flex items-center space-x-2 text-xs cursor-pointer">
-                        <input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-900 border-gray-700 text-blue-600">
-                        <span>@${f}</span>
-                    </label>
-                `;
-            });
-        }
-        function closeGroupModal() { document.getElementById('group-modal').classList.add('hidden'); }
-
-        async function performSearch() {
-            const query = document.getElementById('modal-search-input').value;
-            const res = await fetch(`/api/search?q=${query}&user=${currentUser}`);
-            const usersList = await res.json();
-            const resultsEl = document.getElementById('modal-search-results');
-            resultsEl.innerHTML = "";
-
-            usersList.forEach(u => {
-                const isFriend = friends.includes(u.username);
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-gray-900/80 px-3 py-2.5 rounded-xl text-xs text-white border border-gray-800";
-                div.innerHTML = `
-                    <span>@${u.username}</span>
-                    <div class="flex gap-1.5">
-                        <button onclick="toggleFollow('${u.username}')" class="bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded-lg text-[10px] font-semibold">Takip Et</button>
-                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-green-400 font-semibold text-[10px] self-center">Arkadaşsın</span>'}
-                    </div>
-                `;
-                resultsEl.appendChild(div);
-            });
-        }
-
-        async function sendRequest(targetUser) {
-            const res = await fetch('/api/send-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser })
-            });
-            const data = await res.json();
-            alert(data.success ? "Arkadaşlık isteği gönderildi!" : data.message);
-        }
-
-        async function toggleFollow(targetUser) {
-            await fetch('/api/toggle-follow', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser })
-            });
-            refreshData();
-            alert("Takip işlemi güncellendi!");
-        }
-
-        async function renderNotifications(reqs, notifs) {
-            const reqList = document.getElementById('requests-list');
-            const notifList = document.getElementById('notifications-list');
-            reqList.innerHTML = "";
-            notifList.innerHTML = "";
-
-            if (reqs.length > 0 || notifs.length > 0) {
-                document.getElementById('notif-badge').classList.remove('hidden');
-            }
-
-            reqs.forEach(req => {
-                const isFollowingBack = following.includes(req.from);
-                reqList.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white">
-                        <span>@${req.from}</span>
-                        <div class="flex gap-1.5">
-                            <button onclick="acceptRequest('${req.from}')" class="bg-green-600 hover:bg-green-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
-                            <button onclick="toggleFollow('${req.from}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-semibold">${isFollowingBack ? 'Takiptesin' : 'Geri Takip Et'}</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            notifs.forEach(n => {
-                notifList.innerHTML += `
-                    <div class="bg-gray-900/60 px-3 py-2 rounded-xl text-xs text-gray-300 border border-gray-800 flex justify-between">
-                        <span>${n.text}</span>
-                        <span class="text-[9px] text-gray-500">${n.date}</span>
-                    </div>
-                `;
-            });
-        }
-
-        async function acceptRequest(requester) {
-            await fetch('/api/accept-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, requester })
-            });
-            refreshData();
-            openNotificationsModal();
-        }
-
-        async function createGroup() {
-            const groupName = document.getElementById('group-name-input').value;
-            const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
-            const members = Array.from(checkboxes).map(cb => cb.value);
-
-            const res = await fetch('/api/create-group', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ groupName, creator: currentUser, members })
-            });
-            const data = await res.json();
-            if (data.success) {
-                closeGroupModal();
-                refreshData();
-                selectRoom(data.groupId, data.groupName, null);
-            } else {
-                alert(data.message);
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('luxe_user');
-            location.reload();
-        }
-
-        function sendMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('m');
-            const text = input.value.trim();
-            if (text && currentRoom) {
-                sendCustomMessage(text);
-                input.value = '';
-            }
-        }
-
-        function appendMessage(data) {
-            const item = document.createElement('li');
-            const isMe = data.sender === currentUser;
-            item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
-            item.innerHTML = `
-                <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-br-xs shadow-lg shadow-blue-600/20' : 'bg-gray-900 text-gray-200 rounded-bl-xs border border-gray-800'}">
-                    ${!isMe ? `<span class="block text-[10px] text-blue-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
-                    ${data.text}
-                </div>
-            `;
-            document.getElementById('messages').appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
-        }
-    </script>
-</body>
-</html>
+            socket.on('new notification', function
