@@ -48,7 +48,6 @@ app.get('/api/search', (req, res) => {
     res.json(results);
 });
 
-// Arkadaşlık & Takip İsteği Gönder
 app.post('/api/send-request', (req, res) => {
     const { username, targetUser } = req.body;
     const target = users.find(u => u.username === targetUser);
