@@ -21,13 +21,13 @@
 </head>
 <body class="bg-black text-gray-100 h-screen flex justify-center items-center overflow-hidden font-sans">
 
-    <!-- Ana Ekran Kısayolu Bildirim Banner'ı -->
+    <!-- PWA Install Banner -->
     <div id="pwa-install-banner" class="fixed top-4 left-4 right-4 max-w-md mx-auto bg-blue-600 text-white p-4 rounded-2xl shadow-2xl z-50 hidden flex justify-between items-center border border-blue-400">
         <div class="flex items-center space-x-3">
             <span class="text-2xl">📱</span>
             <div>
                 <h4 class="font-bold text-xs">Ana Ekrana Ekle</h4>
-                <p class="text-[10px] text-blue-100">Uygulama gibi tek dokunuşla açmak için ekle!</p>
+                <p class="text-[10px] text-blue-100">Uygulama gibi tek dokunuşla aç!</p>
             </div>
         </div>
         <div class="flex space-x-2">
@@ -67,7 +67,7 @@
     <!-- Ana Sohbet Arayüzü -->
     <div id="chat-container" class="w-full max-w-5xl h-[95vh] md:h-[92vh] glass-panel rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
         
-        <!-- Sol Panel (Sohbet Listesi) -->
+        <!-- Sol Panel -->
         <div id="sidebar" class="w-full md:w-80 bg-gray-950/95 border-r border-gray-900 flex flex-col h-full">
             <div class="p-4 border-b border-gray-900 flex justify-between items-center bg-gray-900/30">
                 <div class="flex items-center space-x-3">
@@ -82,7 +82,7 @@
                     <button onclick="openGroupModal()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-sm font-bold border border-gray-800" title="Grup Kur">+</button>
                     <button onclick="openNotificationsModal()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 flex items-center justify-center text-white transition text-xs border border-gray-800 relative" title="Bildirimler">
                         🔔
-                        <span id="notif-badge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full hidden"></span>
+                        <span id="notif-badge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-500 rounded-full hidden animate-pulse"></span>
                     </button>
                     <button onclick="logout()" class="text-[10px] text-gray-400 hover:text-red-400 bg-gray-900 px-2 py-1.5 rounded-xl transition border border-gray-800">Çıkış</button>
                 </div>
@@ -183,7 +183,6 @@
         let unreadRooms = JSON.parse(localStorage.getItem('luxe_unread') || "{}");
         let deferredPrompt;
 
-        // PWA Ana Ekran Kısayolu Tetikleyicisi
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -194,9 +193,6 @@
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('Kullanıcı ana ekrana eklemeyi kabul etti');
-                    }
                     deferredPrompt = null;
                     document.getElementById('pwa-install-banner').classList.add('hidden');
                 });
@@ -281,8 +277,9 @@
             document.getElementById('profile-initial').innerText = username.charAt(0).toUpperCase();
             
             socket = io();
+            socket.emit('register user', username);
+
             socket.on('chat message', function(data) {
-                // Eğer mesajı başkası attıysa veya başka odadan geldiyse
                 if (data.room === currentRoom) {
                     if(data.sender !== currentUser) {
                         appendMessage(data);
@@ -292,6 +289,17 @@
                     localStorage.setItem('luxe_unread', JSON.stringify(unreadRooms));
                     refreshData();
                 }
+            });
+
+            // Anlık bildirim geldiğinde
+            socket.on('new notification', function(data) {
+                document.getElementById('notif-badge').classList.remove('hidden');
+                refreshData();
+            });
+
+            // Verileri tazeleme sinyali
+            socket.on('refresh data', function() {
+                refreshData();
             });
 
             refreshData();
@@ -393,8 +401,13 @@
 
         function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
         function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
-        function openNotificationsModal() { document.getElementById('notifications-modal').classList.remove('hidden'); refreshData(); }
+        function openNotificationsModal() {
+            document.getElementById('notifications-modal').classList.remove('hidden');
+            document.getElementById('notif-badge').classList.add('hidden');
+            refreshData();
+        }
         function closeNotificationsModal() { document.getElementById('notifications-modal').classList.add('hidden'); }
+        
         function openGroupModal() {
             document.getElementById('group-modal').classList.remove('hidden');
             const box = document.getElementById('group-friends-checkboxes');
@@ -454,12 +467,12 @@
         async function renderNotifications(reqs, notifs) {
             const reqList = document.getElementById('requests-list');
             const notifList = document.getElementById('notifications-list');
-            const badge = document.getElementById('notif-badge');
             reqList.innerHTML = "";
             notifList.innerHTML = "";
 
-            if (reqs.length > 0 || notifs.length > 0) badge.classList.remove('hidden');
-            else badge.classList.add('hidden');
+            if (reqs.length > 0 || notifs.length > 0) {
+                document.getElementById('notif-badge').classList.remove('hidden');
+            }
 
             reqs.forEach(req => {
                 reqList.innerHTML += `
@@ -526,10 +539,7 @@
                     text: text
                 };
                 
-                // Mesajı anında ekrana düşür (Optimistic UI)
                 appendMessage(messageData);
-
-                // Socket ile karşı tarafa gönder
                 socket.emit('chat message', messageData);
                 input.value = '';
             }

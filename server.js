@@ -10,6 +10,7 @@ app.use(express.static(__dirname));
 
 const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [] }
 const groups = []; // { id, name, creator, members: [] }
+const activeSockets = {}; // username -> socket.id eşlemesi
 
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
@@ -48,6 +49,7 @@ app.get('/api/search', (req, res) => {
     res.json(results);
 });
 
+// Arkadaşlık İsteği Gönder & Anlık Bildir
 app.post('/api/send-request', (req, res) => {
     const { username, targetUser } = req.body;
     const target = users.find(u => u.username === targetUser);
@@ -55,11 +57,21 @@ app.post('/api/send-request', (req, res) => {
     if (target.requests.some(r => r.from === username)) return res.json({ success: false, message: "Zaten istek gönderilmiş!" });
     if (target.friends.includes(username)) return res.json({ success: false, message: "Zaten arkadaşsınız!" });
 
-    target.requests.push({ from: username, type: 'friend' });
-    target.notifications.unshift({ text: `@${username} sana arkadaşlık isteği gönderdi.`, date: new Date().toLocaleTimeString() });
+    const newReq = { from: username, type: 'friend' };
+    const newNotif = { text: `@${username} sana arkadaşlık isteği gönderdi.`, date: new Date().toLocaleTimeString() };
+    
+    target.requests.push(newReq);
+    target.notifications.unshift(newNotif);
+
+    // Eğer karşı taraf çevrimdiyse (socket'i varsa) anlık bildir
+    if (activeSockets[targetUser]) {
+        io.to(activeSockets[targetUser]).emit('new notification', { request: newReq, notification: newNotif });
+    }
+
     res.json({ success: true });
 });
 
+// Takip Et / Takipten Çık & Anlık Bildir
 app.post('/api/toggle-follow', (req, res) => {
     const { username, targetUser } = req.body;
     const user = users.find(u => u.username === username);
@@ -74,7 +86,12 @@ app.post('/api/toggle-follow', (req, res) => {
     } else {
         user.following.push(targetUser);
         target.followers.push(username);
-        target.notifications.unshift({ text: `@${username} seni takip etmeye başladı.`, date: new Date().toLocaleTimeString() });
+        const newNotif = { text: `@${username} seni takip etmeye başladı.`, date: new Date().toLocaleTimeString() };
+        target.notifications.unshift(newNotif);
+
+        if (activeSockets[targetUser]) {
+            io.to(activeSockets[targetUser]).emit('new notification', { notification: newNotif });
+        }
     }
     res.json({ success: true, isFollowing: !isFollowing });
 });
@@ -102,7 +119,15 @@ app.post('/api/accept-request', (req, res) => {
         user.requests = user.requests.filter(r => r.from !== requester);
         if (!user.friends.includes(requester)) user.friends.push(requester);
         if (!reqUser.friends.includes(username)) reqUser.friends.push(username);
-        user.notifications.unshift({ text: `@${requester} ile arkadaşlık isteğini onayladın.`, date: new Date().toLocaleTimeString() });
+        
+        const newNotif = { text: `@${requester} ile arkadaşlık isteğin onaylandı.`, date: new Date().toLocaleTimeString() };
+        user.notifications.unshift(newNotif);
+        reqUser.notifications.unshift({ text: `@${username} arkadaşlık isteğini onayladı!`, date: new Date().toLocaleTimeString() });
+
+        if (activeSockets[requester]) {
+            io.to(activeSockets[requester]).emit('refresh data');
+        }
+
         res.json({ success: true });
     } else {
         res.json({ success: false });
@@ -144,12 +169,26 @@ app.get('/api/archived', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+    // Kullanıcı bağlandığında socket id'sini kaydet
+    socket.on('register user', (username) => {
+        activeSockets[username] = socket.id;
+    });
+
     socket.on('join room', (room) => {
         socket.join(room);
     });
 
     socket.on('chat message', (data) => {
         io.to(data.room).emit('chat message', data);
+    });
+
+    socket.on('disconnect', () => {
+        for (let user in activeSockets) {
+            if (activeSockets[user] === socket.id) {
+                delete activeSockets[user];
+                break;
+            }
+        }
     });
 });
 
