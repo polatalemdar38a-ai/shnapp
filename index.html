@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socket.io Chat & Auth App</title>
+    <title>Socket.io Sohbet Uygulaması</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Socket.io Kütüphanesi -->
@@ -11,8 +11,9 @@
 </head>
 <body class="bg-gray-100 h-screen flex flex-col justify-center items-center">
 
+    <!-- Giriş / Kayıt Konteyneri -->
     <div class="w-full max-w-md bg-white p-6 rounded-lg shadow-md" id="auth-container">
-        <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Sohbet Uygulaması</h2>
+        <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Sohbet Odasına Hoş Geldiniz</h2>
         
         <!-- Sekme Butonları -->
         <div class="flex mb-4 border-b">
@@ -75,13 +76,18 @@
                 tabReg.className = "flex-1 py-2 font-semibold text-green-600 border-b-2 border-green-600";
                 tabLogin.className = "flex-1 py-2 font-semibold text-gray-400";
             }
-            document.getElementById('auth-msg').innerText = "";
+            document.getElementById('auth-msginnerText = "";
         }
 
         async function register() {
             const username = document.getElementById('reg-username').value;
             const password = document.getElementById('reg-password').value;
             const msgEl = document.getElementById('auth-msg');
+
+            if(!username || !password) {
+                msgEl.innerText = "Lütfen tüm alanları doldurun!";
+                return;
+            }
 
             const res = await fetch('/api/register', {
                 method: 'POST',
@@ -102,8 +108,13 @@
 
         async function login() {
             const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password'].value;
+            const password = document.getElementById('login-password').value;
             const msgEl = document.getElementById('auth-msg');
+
+            if(!username || !password) {
+                msgEl.innerText = "Lütfen tüm alanları doldurun!";
+                return;
+            }
 
             const res = await fetch('/api/login', {
                 method: 'POST',
@@ -123,11 +134,12 @@
                 socket.on('chat message', function(msg) {
                     const item = document.createElement('li');
                     item.textContent = msg;
-                    item.className = "bg-white p-2 rounded shadow-sm";
+                    item.className = "bg-white p-2 rounded shadow-sm border";
                     document.getElementById('messages').appendChild(item);
                     window.scrollTo(0, document.body.scrollHeight);
                 });
             } else {
+                msgEl.className = "mt-4 text-center text-sm text-red-500";
                 msgEl.innerText = data.message;
             }
         }
