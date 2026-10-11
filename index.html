@@ -3,61 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Socket.io Sohbet Uygulaması</title>
-    <!-- Tailwind CSS -->
+    <title>Koyu Mod Sohbet Uygulaması</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io Kütüphanesi -->
     <script src="/socket.io/socket.io.js"></script>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col justify-center items-center">
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col justify-center items-center">
 
-    <!-- Giriş / Kayıt Konteyneri -->
-    <div class="w-full max-w-md bg-white p-6 rounded-lg shadow-md" id="auth-container">
-        <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Sohbet Odasına Hoş Geldiniz</h2>
+    <!-- Giriş / Kayıt Ekranı -->
+    <div class="w-full max-w-md bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700" id="auth-container">
+        <h2 class="text-2xl font-bold mb-4 text-center text-indigo-400">Sohbet Odasına Giriş</h2>
         
-        <!-- Sekme Butonları -->
-        <div class="flex mb-4 border-b">
-            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600">Giriş Yap</button>
+        <div class="flex mb-4 border-b border-gray-700">
+            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-semibold text-indigo-400 border-b-2 border-indigo-400">Giriş Yap</button>
             <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 font-semibold text-gray-400">Kayıt Ol</button>
         </div>
 
-        <!-- Giriş Formu -->
         <div id="login-form" class="space-y-4">
-            <input type="text" id="login-username" placeholder="Kullanıcı Adı" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="login()" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Giriş Yap</button>
+            <input type="text" id="login-username" placeholder="Kullanıcı Adı" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white">
+            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-white">
+            <button onclick="login()" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">Giriş Yap</button>
         </div>
 
-        <!-- Kayıt Formu (Başlangıçta gizli) -->
         <div id="register-form" class="space-y-4 hidden">
-            <input type="text" id="reg-username" placeholder="Kullanıcı Adı Seçin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-            <input type="password" id="reg-password" placeholder="Şifre Belirleyin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-            <button onclick="register()" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">Kayıt Ol</button>
+            <input type="text" id="reg-username" placeholder="Kullanıcı Adı Seçin" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white">
+            <input type="password" id="reg-password" placeholder="Şifre Belirleyin" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white">
+            <button onclick="register()" class="w-full bg-emerald-600 text-white py-2 rounded-lg hover:bg-emerald-700 transition">Kayıt Ol</button>
         </div>
         
-        <p id="auth-msg" class="mt-4 text-center text-sm text-red-500"></p>
+        <p id="auth-msg" class="mt-4 text-center text-sm text-red-400"></p>
     </div>
 
-    <!-- Sohbet Alanı (Giriş yapınca görünür) -->
-    <div id="chat-container" class="w-full max-w-md bg-white p-6 rounded-lg shadow-md hidden flex flex-col h-[500px]">
-        <div class="flex justify-between items-center mb-4 border-b pb-2">
-            <h3 id="welcome-user" class="font-bold text-gray-700">Sohbet Odası</h3>
-            <button onclick="logout()" class="text-sm text-red-500 hover:underline">Çıkış Yap</button>
-        </div>
+    <!-- Sohbet Arayüzü (Sidebar + Mesaj Alanı) -->
+    <div id="chat-container" class="w-full max-w-4xl h-[85vh] bg-gray-800 rounded-xl shadow-2xl border border-gray-700 hidden flex overflow-hidden">
         
-        <!-- Mesaj Listesi -->
-        <ul id="messages" class="flex-1 overflow-y-auto space-y-2 mb-4 border p-2 rounded-lg bg-gray-50 text-sm"></ul>
+        <!-- Sol Kenar Çubuğu (Kullanıcı Arama ve Sohbet Listesi) -->
+        <div class="w-1/3 bg-gray-900 border-r border-gray-700 flex flex-col">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <span id="current-username" class="font-bold text-indigo-400">Kullanıcı</span>
+                <button onclick="logout()" class="text-xs bg-red-600/80 hover:bg-red-600 px-2 py-1 rounded text-white transition">Çıkış</button>
+            </div>
 
-        <!-- Mesaj Gönderme Formu -->
-        <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
-            <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Gönder</button>
-        </form>
+            <!-- Kullanıcı Arama Çubuğu -->
+            <div class="p-3 border-b border-gray-800">
+                <input type="text" id="search-input" oninput="searchUsers()" placeholder="Kullanıcı ara..." class="w-full px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                <div id="search-results" class="mt-2 space-y-1 max-h-32 overflow-y-auto"></div>
+            </div>
+
+            <!-- Sohbet Odaları / Arkadaşlar Listesi -->
+            <div class="flex-1 overflow-y-auto p-2 space-y-1">
+                <div onclick="selectRoom('Genel Grup')" id="room-Genel Grup" class="p-2.5 rounded-lg cursor-pointer bg-indigo-600/30 text-indigo-300 font-medium text-sm flex items-center justify-between transition">
+                    <span>💬 Genel Grup Sohbeti</span>
+                </div>
+                <div id="friends-list" class="space-y-1 mt-2">
+                    <!-- Arkadaş listesi dinamik gelecek -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Ana Sohbet Alanı -->
+        <div class="flex-1 flex flex-col bg-gray-800">
+            <!-- Sohbet Başlığı -->
+            <div class="p-4 border-b border-gray-700 bg-gray-850 flex items-center">
+                <h3 id="active-room-title" class="font-bold text-lg text-gray-200">Genel Grup</h3>
+            </div>
+
+            <!-- Mesaj Listesi -->
+            <ul id="messages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-900/50 text-sm"></ul>
+
+            <!-- Mesaj Gönderme Formu -->
+            <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 border-t border-gray-700 bg-gray-800 flex gap-2">
+                <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <button class="bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition font-medium">Gönder</button>
+            </form>
+        </div>
     </div>
 
     <script>
         let currentUser = "";
+        let currentRoom = "Genel Grup";
         let socket;
+        let friends = [];
 
         function switchTab(tab) {
             const loginForm = document.getElementById('login-form');
@@ -68,12 +93,12 @@
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
                 regForm.classList.add('hidden');
-                tabLogin.className = "flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600";
+                tabLogin.className = "flex-1 py-2 font-semibold text-indigo-400 border-b-2 border-indigo-400";
                 tabReg.className = "flex-1 py-2 font-semibold text-gray-400";
             } else {
                 regForm.classList.remove('hidden');
                 loginForm.classList.add('hidden');
-                tabReg.className = "flex-1 py-2 font-semibold text-green-600 border-b-2 border-green-600";
+                tabReg.className = "flex-1 py-2 font-semibold text-emerald-400 border-b-2 border-emerald-400";
                 tabLogin.className = "flex-1 py-2 font-semibold text-gray-400";
             }
             document.getElementById('auth-msg').innerText = "";
@@ -84,24 +109,18 @@
             const password = document.getElementById('reg-password').value;
             const msgEl = document.getElementById('auth-msg');
 
-            if(!username || !password) {
-                msgEl.innerText = "Lütfen tüm alanları doldurun!";
-                return;
-            }
-
             const res = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
             const data = await res.json();
-            
             if (data.success) {
-                msgEl.className = "mt-4 text-center text-sm text-green-500";
-                msgEl.innerText = "Kayıt başarılı! Şimdi giriş yapabilirsiniz.";
+                msgEl.className = "mt-4 text-center text-sm text-emerald-400";
+                msgEl.innerText = "Kayıt başarılı! Giriş yapabilirsiniz.";
                 switchTab('login');
             } else {
-                msgEl.className = "mt-4 text-center text-sm text-red-500";
+                msgEl.className = "mt-4 text-center text-sm text-red-400";
                 msgEl.innerText = data.message;
             }
         }
@@ -111,11 +130,6 @@
             const password = document.getElementById('login-password').value;
             const msgEl = document.getElementById('auth-msg');
 
-            if(!username || !password) {
-                msgEl.innerText = "Lütfen tüm alanları doldurun!";
-                return;
-            }
-
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -124,39 +138,109 @@
             const data = await res.json();
 
             if (data.success) {
-                currentUser = username;
+                currentUser = data.username;
                 document.getElementById('auth-container').classList.add('hidden');
                 document.getElementById('chat-container').classList.remove('hidden');
-                document.getElementById('welcome-user').innerText = `Hoş geldin, ${username}`;
+                document.getElementById('current-username').innerText = `@${currentUser}`;
                 
-                // Socket bağlantısını başlat
+                // Socket başlat ve genel odaya gir
                 socket = io();
-                socket.on('chat message', function(msg) {
-                    const item = document.createElement('li');
-                    item.textContent = msg;
-                    item.className = "bg-white p-2 rounded shadow-sm border";
-                    document.getElementById('messages').appendChild(item);
-                    window.scrollTo(0, document.body.scrollHeight);
+                selectRoom('Genel Grup');
+
+                socket.on('chat message', function(data) {
+                    // Sadece aktif odadaki mesajları göster
+                    if (data.room === currentRoom) {
+                        const item = document.createElement('li');
+                        const isMe = data.sender === currentUser;
+                        item.className = `p-2.5 rounded-lg max-w-[80%] ${isMe ? 'bg-indigo-600 ml-auto text-white' : 'bg-gray-700 text-gray-200'}`;
+                        item.innerHTML = `<span class="block text-xs opacity-70 mb-0.5">${data.sender}</span>${data.text}`;
+                        document.getElementById('messages').appendChild(item);
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
                 });
+
+                loadFriends();
             } else {
-                msgEl.className = "mt-4 text-center text-sm text-red-500";
                 msgEl.innerText = data.message;
             }
         }
 
-        function logout() {
-            currentUser = "";
-            if (socket) socket.disconnect();
-            document.getElementById('chat-container').classList.add('hidden');
-            document.getElementById('auth-container').classList.remove('hidden');
+        async function searchUsers() {
+            const query = document.getElementById('search-input').value;
+            const resultsEl = document.getElementById('search-results');
+            if (!query) {
+                resultsEl.innerHTML = "";
+                return;
+            }
+
+            const res = await fetch(`/api/search?q=${query}&user=${currentUser}`);
+            const usersList = await res.json();
+
+            resultsEl.innerHTML = "";
+            usersList.forEach(u => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-gray-800 px-2 py-1.5 rounded text-xs text-gray-200";
+                div.innerHTML = `<span>@${u.username}</span> <button onclick="addFriend('${u.username}')" class="bg-indigo-600 hover:bg-indigo-500 px-2 py-0.5 rounded text-white">Ekle</button>`;
+                resultsEl.appendChild(div);
+            });
+        }
+
+        async function addFriend(friendName) {
+            const res = await fetch('/api/add-friend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, friendName })
+            });
+            const data = await res.json();
+            if (data.success) {
+                loadFriends();
+                document.getElementById('search-input').value = "";
+                document.getElementById('search-results').innerHTML = "";
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function loadFriends() {
+            const res = await fetch(`/api/friends?user=${currentUser}`);
+            const data = await res.json();
+            if (data.success) {
+                friends = data.friends;
+                const listEl = document.getElementById('friends-list');
+                listEl.innerHTML = "";
+                friends.forEach(f => {
+                    // DM oda ismi iki kullanıcının isminin alfabetik sıralanmasıyla oluşur
+                    const roomName = [currentUser, f].sort().join('_');
+                    const div = document.createElement('div');
+                    div.id = `room-${roomName}`;
+                    div.className = "p-2.5 rounded-lg cursor-pointer hover:bg-gray-800 text-gray-300 text-sm flex items-center justify-between transition";
+                    div.innerHTML = `<span>👤 ${f}</span>`;
+                    div.onclick = () => selectRoom(roomName, f);
+                    listEl.appendChild(div);
+                });
+            }
+        }
+
+        function selectRoom(room, displayName = "Genel Grup") {
+            currentRoom = room;
+            document.getElementById('active-room-title.innerText = room === 'Genel Grup' ? 'Genel Grup Sohbeti' : `Özel Sohbet: @${displayName}`;
             document.getElementById('messages').innerHTML = "";
+            socket.emit('join room', room);
+        }
+
+        function logout() {
+            location.reload();
         }
 
         function sendMessage(e) {
             e.preventDefault();
             const input = document.getElementById('m');
-            if (input.value) {
-                socket.emit('chat message', `${currentUser}: ${input.value}`);
+            if (input.value.trim()) {
+                socket.emit('chat message', {
+                    room: currentRoom,
+                    sender: currentUser,
+                    text: input.value
+                });
                 input.value = '';
             }
         }
