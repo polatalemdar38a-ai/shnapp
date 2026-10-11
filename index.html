@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SHNAPP - Messenger</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,13 +20,27 @@
         
         html, body {
             height: 100%;
-            height: -webkit-fill-available;
+            width: 100%;
             overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        #app-viewport {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
-<body class="bg-black text-gray-100 h-[100dvh] flex justify-center items-center font-sans">
+<body class="bg-black text-gray-100 font-sans">
 
+<div id="app-viewport">
     <!-- PWA Install Banner -->
     <div id="pwa-install-banner" class="fixed top-4 left-4 right-4 max-w-md mx-auto bg-blue-600 text-white p-4 rounded-2xl shadow-2xl z-50 hidden flex justify-between items-center border border-blue-400">
         <div class="flex items-center space-x-3">
@@ -71,10 +85,10 @@
     </div>
 
     <!-- Ana Sohbet Arayüzü -->
-    <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92dvh] glass-panel md:rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
+    <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92vh] glass-panel md:rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
         
         <!-- Sol Panel -->
-        <div id="sidebar" class="w-full md:w-80 bg-gray-950/95 border-r border-gray-900 flex flex-col h-full">
+        <div id="sidebar" class="w-full md:w-80 bg-gray-950/95 border-r border-gray-900 flex flex-col h-full shrink-0">
             <div class="p-4 border-b border-gray-900 flex justify-between items-center bg-gray-900/30">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-600/20" id="profile-initial">S</div>
@@ -113,10 +127,10 @@
         </div>
 
         <!-- Sağ Ana Sohbet Alanı -->
-        <div id="chat-pane" class="hidden md:flex flex-1 flex-col justify-between bg-black/40 h-full relative bg-cover bg-center">
+        <div id="chat-pane" class="hidden md:flex flex-1 flex-col justify-between bg-black/40 h-full relative bg-cover bg-center overflow-hidden">
             
             <!-- Üst Bar -->
-            <div class="px-4 md:px-6 py-3.5 border-b border-gray-900/80 bg-gray-950/90 flex items-center justify-between shrink-0">
+            <div class="px-4 md:px-6 py-3.5 border-b border-gray-900/80 bg-gray-950/90 flex items-center justify-between shrink-0 z-10">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-blue-400 font-bold text-lg mr-1">←</button>
                     <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">⚡</div>
@@ -126,14 +140,12 @@
                     </div>
                 </div>
 
-                <!-- Arama ve Görüntülü/Sesli Görüşme Butonları -->
                 <div class="flex items-center space-x-2">
                     <button onclick="startCall(false)" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-green-600 text-green-400 hover:text-white flex items-center justify-center text-xs border border-gray-800 transition" title="Sesli Arama">📞</button>
                     <button onclick="startCall(true)" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 text-blue-400 hover:text-white flex items-center justify-center text-xs border border-gray-800 transition" title="Görüntülü Arama">📹</button>
                     <button onclick="toggleInlineSearch()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-300 flex items-center justify-center text-xs border border-gray-800 transition" title="Sohbet İçi Mesaj Ara">🔍</button>
                 </div>
 
-                <!-- Başlık Altı Açılır Menü -->
                 <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-gray-950 border border-blue-900/40 rounded-2xl shadow-2xl py-2 z-50 hidden">
                     <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-blue-600/20 hover:text-white flex items-center gap-2">📂 Sohbeti Arşivle</button>
                     <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-600/20 flex items-center gap-2">🗑️ Sohbeti Sil</button>
@@ -146,7 +158,7 @@
             </div>
 
             <!-- Sohbet İçi Anlık Mesaj Arama Girişi -->
-            <div id="inline-search-bar" class="hidden px-4 py-2 bg-gray-900/90 border-b border-gray-800 flex items-center gap-2">
+            <div id="inline-search-bar" class="hidden px-4 py-2 bg-gray-900/90 border-b border-gray-800 flex items-center gap-2 shrink-0 z-10">
                 <input type="text" id="chat-search-input" oninput="filterMessages()" placeholder="Mesajlarda ara..." class="flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
                 <button onclick="toggleInlineSearch()" class="text-xs text-gray-400 hover:text-white font-bold">✕</button>
             </div>
@@ -154,8 +166,8 @@
             <!-- Mesaj Listesi -->
             <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-black/20 text-sm"></ul>
 
-            <!-- Mesaj Gönderme Çubuğu -->
-            <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/95 flex items-center gap-2 md:gap-3 shrink-0 sticky bottom-0">
+            <!-- Mesaj Gönderme Çubuğu (Klavyeye Tam Bitişik) -->
+            <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/98 flex items-center gap-2 md:gap-3 shrink-0 z-20">
                 <label class="w-10 h-10 rounded-2xl bg-gray-900 hover:bg-gray-800 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition shrink-0" title="Resim Gönder">
                     📷
                     <input type="file" accept="image/*" onchange="sendImage(event)" class="hidden">
@@ -246,8 +258,22 @@
             <button id="end-call-btn" onclick="endCall()" class="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center text-xl shadow-lg shadow-red-600/40">📵</button>
         </div>
     </div>
+</div>
 
     <script>
+        // Mobil Klavye Açıldığında Ekran Yüksekliğini Anlık Ayarlayan Hassas Yapı
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                const viewport = document.getElementById('app-viewport');
+                viewport.style.height = `${window.visualViewport.height}px`;
+                const msgBox = document.getElementById('messages');
+                if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+            });
+            window.visualViewport.addEventListener('scroll', () => {
+                window.scrollTo(0, 0);
+            });
+        }
+
         let currentUser = localStorage.getItem('shnapp_user') || "";
         let currentRoom = "";
         let activeFriendName = "";
@@ -291,7 +317,6 @@
             }
         };
 
-        // Giriş ve Kayıt Ekranı Sekmelerini Değiştiren Fonksiyon
         function switchTab(tab) {
             const loginForm = document.getElementById('login-form');
             const regForm = document.getElementById('register-form');
@@ -383,7 +408,6 @@
                 refreshData();
             });
 
-            // WebRTC Socket Dinleyicileri
             socket.on('incoming-call', async (data) => {
                 incomingCallData = data;
                 document.getElementById('call-modal').classList.remove('hidden');
@@ -586,7 +610,6 @@
             toggleHeaderMenu();
         }
 
-        // WebRTC Arama Fonksiyonları
         async function startCall(isVideo) {
             if (!activeFriendName) {
                 alert("Lütfen önce bir sohbet seçin!");
@@ -865,8 +888,9 @@
                     ${data.text}
                 </div>
             `;
-            document.getElementById('messages').appendChild(item);
-            window.scrollTo(0, document.body.scrollHeight);
+            const msgList = document.getElementById('messages');
+            msgList.appendChild(item);
+            msgList.scrollTop = msgList.scrollHeight;
         }
     </script>
 </body>
