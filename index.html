@@ -3,385 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>shnapp - Anlık Mesajlaşma</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Socket.io Chat & Auth App</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        /* Özel Scrollbar ve Tasarım Detayları */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-    </style>
+    <!-- Socket.io Kütüphanesi -->
+    <script src="/socket.io/socket.io.js"></script>
 </head>
-<body class="bg-gray-950 text-gray-100 flex justify-center items-center h-screen m-0 font-sans">
+<body class="bg-gray-100 h-screen flex flex-col justify-center items-center">
 
-    <!-- 1. GİRİŞ / KAYIT EKRANI -->
-    <div id="auth-section" class="bg-gray-900 p-8 rounded-xl shadow-2xl border border-gray-800 w-96">
-        <h2 class="text-3xl font-extrabold text-center mb-6 text-blue-500 tracking-wider">shnapp</h2>
-        <div id="auth-message" class="text-sm mb-4 text-center"></div>
-        <input type="text" id="usernameInput" placeholder="Kullanıcı Adı" class="w-full p-3 mb-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
-        <input type="password" id="passwordInput" placeholder="Şifre" class="w-full p-3 mb-4 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500 text-white">
-        <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-lg transition duration-200 mb-2">Giriş Yap</button>
-        <button onclick="register()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold p-3 rounded-lg transition duration-200">Kayıt Ol</button>
-    </div>
-
-    <!-- 2. ANA SOHBET EKRANI -->
-    <div id="chat-layout" class="hidden w-[950px] h-[600px] bg-gray-900 rounded-xl shadow-2xl border border-gray-800 flex overflow-hidden">
-        <!-- Sol Menü -->
-        <div class="w-80 bg-gray-950 border-r border-gray-800 p-4 flex flex-col overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-blue-500">shnapp</h3>
-                <span class="text-xs text-gray-400">@<b id="loggedUser" class="text-gray-200"></b></span>
-            </div>
-            
-            <!-- Arkadaş Ekle -->
-            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Arkadaş Ekle</div>
-            <input type="text" id="searchUserInput" placeholder="Kullanıcı adı..." class="w-full p-2 mb-2 bg-gray-900 border border-gray-700 rounded text-sm text-white focus:outline-none focus:border-blue-500">
-            <button onclick="searchUser()" class="w-full bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm font-semibold p-2 rounded mb-2">Kullanıcı Ara</button>
-            <div id="searchResult" class="text-xs mb-3"></div>
-
-            <!-- Gelen İstekler -->
-            <div id="requestsContainer"></div>
-
-            <!-- Gruplar / Odalar -->
-            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 mt-2">Odalar</div>
-            <div id="roomListContainer" class="flex flex-col gap-1 mb-2"></div>
-            <input type="text" id="newRoomInput" placeholder="Yeni oda kur..." class="w-full p-2 mb-1 bg-gray-900 border border-gray-700 rounded text-sm text-white focus:outline-none">
-            <button onclick="createRoom()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold p-2 rounded mb-3">Oda Oluştur</button>
-
-            <!-- Özel Sohbetler (DM) -->
-            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Özel Sohbetler (DM)</div>
-            <div id="friendListContainer" class="flex flex-col gap-1"></div>
+    <div class="w-full max-w-md bg-white p-6 rounded-lg shadow-md" id="auth-container">
+        <h2 class="text-2xl font-bold mb-4 text-center text-gray-700">Sohbet Uygulaması</h2>
+        
+        <!-- Sekme Butonları -->
+        <div class="flex mb-4 border-b">
+            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600">Giriş Yap</button>
+            <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 font-semibold text-gray-400">Kayıt Ol</button>
         </div>
 
-        <!-- Sağ Taraf (Mesajlaşma) -->
-        <div class="flex-1 flex flex-col p-5 bg-gray-900">
-            <h3 id="currentChatTitle" class="text-lg font-semibold text-blue-400 mb-4 pb-2 border-b border-gray-800">Bir sohbet seçin</h3>
-            
-            <div id="messages" class="flex-1 border border-gray-800 rounded-lg overflow-y-auto p-4 mb-4 bg-gray-950 flex flex-col gap-3"></div>
-            
-            <div id="message-box" class="hidden flex gap-2 items-center">
-                <!-- Fotoğraf Yükleme Butonu -->
-                <label class="cursor-pointer bg-gray-800 hover:bg-gray-700 text-gray-300 p-3 rounded-lg flex items-center justify-center">
-                    📷 <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="sendImage(event)">
-                </label>
-                <input type="text" id="messageInput" placeholder="Mesajınızı yazın..." class="flex-1 p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-bold">Gönder</button>
-            </div>
+        <!-- Giriş Formu -->
+        <div id="login-form" class="space-y-4">
+            <input type="text" id="login-username" placeholder="Kullanıcı Adı" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="login()" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">Giriş Yap</button>
         </div>
+
+        <!-- Kayıt Formu (Başlangıçta gizli) -->
+        <div id="register-form" class="space-y-4 hidden">
+            <input type="text" id="reg-username" placeholder="Kullanıcı Adı Seçin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            <input type="password" id="reg-password" placeholder="Şifre Belirleyin" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+            <button onclick="register()" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">Kayıt Ol</button>
+        </div>
+        
+        <p id="auth-msg" class="mt-4 text-center text-sm text-red-500"></p>
     </div>
 
-    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <!-- Sohbet Alanı (Giriş yapınca görünür) -->
+    <div id="chat-container" class="w-full max-w-md bg-white p-6 rounded-lg shadow-md hidden flex flex-col h-[500px]">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <h3 id="welcome-user" class="font-bold text-gray-700">Sohbet Odası</h3>
+            <button onclick="logout()" class="text-sm text-red-500 hover:underline">Çıkış Yap</button>
+        </div>
+        
+        <!-- Mesaj Listesi -->
+        <ul id="messages" class="flex-1 overflow-y-auto space-y-2 mb-4 border p-2 rounded-lg bg-gray-50 text-sm"></ul>
+
+        <!-- Mesaj Gönderme Formu -->
+        <form id="chat-form" onsubmit="sendMessage(event)" class="flex gap-2">
+            <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Gönder</button>
+        </form>
+    </div>
+
     <script>
-        const socket = io('http://localhost:3000');
-        let currentUser = '';
-        let currentTarget = ''; 
-        let isPrivateChat = false;
-        let roomsList = [];
-        let friendsList = [];
-        let pendingRequests = [];
-        let unreadNotifications = {};
-        let onlineUsers = []; // Çevrimiçi kullanıcılar listesi
+        let currentUser = "";
+        let socket;
+
+        function switchTab(tab) {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+            
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                regForm.classList.add('hidden');
+                tabLogin.className = "flex-1 py-2 font-semibold text-blue-600 border-b-2 border-blue-600";
+                tabReg.className = "flex-1 py-2 font-semibold text-gray-400";
+            } else {
+                regForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+                tabReg.className = "flex-1 py-2 font-semibold text-green-600 border-b-2 border-green-600";
+                tabLogin.className = "flex-1 py-2 font-semibold text-gray-400";
+            }
+            document.getElementById('auth-msg').innerText = "";
+        }
 
         async function register() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            const msgDiv = document.getElementById('auth-message');
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const msgEl = document.getElementById('auth-msg');
 
-            const res = await fetch('http://localhost:3000/api/register', {
+            const res = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
             const data = await res.json();
-            msgDiv.className = res.ok ? 'text-emerald-400 text-sm mb-4 text-center' : 'text-red-400 text-sm mb-4 text-center';
-            msgDiv.innerText = res.ok ? data.message : data.error;
+            
+            if (data.success) {
+                msgEl.className = "mt-4 text-center text-sm text-green-500";
+                msgEl.innerText = "Kayıt başarılı! Şimdi giriş yapabilirsiniz.";
+                switchTab('login');
+            } else {
+                msgEl.className = "mt-4 text-center text-sm text-red-500";
+                msgEl.innerText = data.message;
+            }
         }
 
         async function login() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            const msgDiv = document.getElementById('auth-message');
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password'].value;
+            const msgEl = document.getElementById('auth-msg');
 
-            const res = await fetch('http://localhost:3000/api/login', {
+            const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
             const data = await res.json();
 
-            if (res.ok) {
-                currentUser = data.username;
-                socket.emit('register_socket', currentUser);
-
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('chat-layout').style.display = 'flex';
-                document.getElementById('loggedUser').innerText = currentUser;
-                loadSidebarData();
-                loadRooms();
-            } else {
-                msgDiv.className = 'text-red-400 text-sm mb-4 text-center';
-                msgDiv.innerText = data.error;
-            }
-        }
-
-        async function loadSidebarData() {
-            const res = await fetch('http://localhost:3000/api/user-data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                friendsList = data.friends;
-                pendingRequests = data.requests;
-                renderFriends();
-                renderRequests();
-            }
-        }
-
-        async function loadRooms() {
-            const res = await fetch('http://localhost:3000/api/rooms');
-            roomsList = await res.json();
-            renderRooms();
-        }
-
-        function renderRooms() {
-            const container = document.getElementById('roomListContainer');
-            container.innerHTML = '';
-            if (roomsList.length === 0) {
-                container.innerHTML = `<div class="text-xs text-gray-500 p-1">Henüz oda yok.</div>`;
-                return;
-            }
-            roomsList.forEach(room => {
-                const div = document.createElement('div');
-                div.className = `p-2 rounded cursor-pointer text-sm flex justify-between items-center transition ${!isPrivateChat && room === currentTarget ? 'bg-blue-600 text-white' : 'bg-gray-900 hover:bg-gray-800 text-gray-300'}`;
-                let badgeHTML = unreadNotifications[room] ? `<span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">1</span>` : '';
-                div.innerHTML = `<span># ${room}</span> ${badgeHTML}`;
-                div.onclick = () => selectRoom(room);
-                container.appendChild(div);
-            });
-        }
-
-        function renderFriends() {
-            const container = document.getElementById('friendListContainer');
-            container.innerHTML = '';
-            if (friendsList.length === 0) {
-                container.innerHTML = `<div class="text-xs text-gray-500 p-1">Henüz arkadaş yok.</div>`;
-                return;
-            }
-            friendsList.forEach(friend => {
-                const div = document.createElement('div');
-                div.className = `p-2 rounded cursor-pointer text-sm flex justify-between items-center transition ${isPrivateChat && friend === currentTarget ? 'bg-blue-600 text-white' : 'bg-gray-900 hover:bg-gray-800 text-gray-300'}`;
+            if (data.success) {
+                currentUser = username;
+                document.getElementById('auth-container').classList.add('hidden');
+                document.getElementById('chat-container').classList.remove('hidden');
+                document.getElementById('welcome-user').innerText = `Hoş geldin, ${username}`;
                 
-                // Çevrimiçi yeşil nokta göstergesi
-                let isOnline = onlineUsers.includes(friend);
-                let onlineDot = `<span class="inline-block w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-gray-600'} mr-1.5"></span>`;
-                let badgeHTML = unreadNotifications[friend] ? `<span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">1</span>` : '';
-                
-                div.innerHTML = `<div class="flex items-center">${onlineDot} <span>${friend}</span></div> ${badgeHTML}`;
-                div.onclick = () => selectPrivateChat(friend);
-                container.appendChild(div);
-            });
-        }
-
-        function moveToTop(item, type) {
-            if (type === 'room') {
-                const index = roomsList.indexOf(item);
-                if (index > -1) { roomsList.splice(index, 1); roomsList.unshift(item); renderRooms(); }
-            } else if (type === 'friend') {
-                const index = friendsList.indexOf(item);
-                if (index > -1) { friendsList.splice(index, 1); friendsList.unshift(item); renderFriends(); }
-            }
-        }
-
-        function renderRequests() {
-            const container = document.getElementById('requestsContainer');
-            container.innerHTML = '';
-            if (pendingRequests.length > 0) {
-                container.innerHTML = `<div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Gelen İstekler</div>`;
-                pendingRequests.forEach(reqUser => {
-                    const div = document.createElement('div');
-                    div.className = 'p-2 bg-gray-900 rounded flex justify-between items-center text-sm mb-2 border border-gray-800';
-                    div.innerHTML = `<span><b>${reqUser}</b></span> <button onclick="acceptRequest('${reqUser}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2 py-1 rounded font-bold">Kabul Et</button>`;
-                    container.appendChild(div);
+                // Socket bağlantısını başlat
+                socket = io();
+                socket.on('chat message', function(msg) {
+                    const item = document.createElement('li');
+                    item.textContent = msg;
+                    item.className = "bg-white p-2 rounded shadow-sm";
+                    document.getElementById('messages').appendChild(item);
+                    window.scrollTo(0, document.body.scrollHeight);
                 });
-            }
-        }
-
-        async function searchUser() {
-            const searchTarget = document.getElementById('searchUserInput').value.trim();
-            const resDiv = document.getElementById('searchResult');
-            if (!searchTarget) return;
-
-            const res = await fetch('http://localhost:3000/api/search-user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, searchTarget })
-            });
-            const data = await res.json();
-
-            if (res.ok) {
-                resDiv.innerHTML = `Bulundu: <b>${data.username}</b> <button onclick="sendRequest('${data.username}')" class="mt-1 bg-emerald-600 text-white text-xs px-2 py-1 rounded block w-full font-bold">İstek Gönder</button>`;
             } else {
-                resDiv.innerHTML = `<span class="text-red-400">${data.error}</span>`;
+                msgEl.innerText = data.message;
             }
         }
 
-        async function sendRequest(receiver) {
-            await fetch('http://localhost:3000/api/send-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sender: currentUser, receiver })
-            });
-            alert('Arkadaşlık isteği gönderildi!');
-            document.getElementById('searchResult').innerHTML = '';
-            document.getElementById('searchUserInput').value = '';
+        function logout() {
+            currentUser = "";
+            if (socket) socket.disconnect();
+            document.getElementById('chat-container').classList.add('hidden');
+            document.getElementById('auth-container').classList.remove('hidden');
+            document.getElementById('messages').innerHTML = "";
         }
 
-        async function acceptRequest(requester) {
-            const res = await fetch('http://localhost:3000/api/accept-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, requester })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                friendsList = data.friends;
-                pendingRequests = data.requests;
-                renderFriends();
-                renderRequests();
+        function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('m');
+            if (input.value) {
+                socket.emit('chat message', `${currentUser}: ${input.value}`);
+                input.value = '';
             }
         }
-
-        async function createRoom() {
-            const roomName = document.getElementById('newRoomInput').value.trim();
-            if (!roomName) return;
-
-            const res = await fetch('http://localhost:3000/api/rooms', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ roomName })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                document.getElementById('newRoomInput').value = '';
-                loadRooms();
-            } else {
-                alert(data.error);
-            }
-        }
-
-        function selectRoom(room) {
-            isPrivateChat = false;
-            currentTarget = room;
-            unreadNotifications[room] = false;
-            moveToTop(room, 'room');
-
-            document.getElementById('currentChatTitle').innerText = `Oda: ${room}`;
-            document.getElementById('messages').innerHTML = '';
-            document.getElementById('message-box').style.display = 'flex';
-            
-            socket.emit('join_room', { room });
-            renderRooms();
-        }
-
-        function selectPrivateChat(friend) {
-            isPrivateChat = true;
-            currentTarget = friend;
-            unreadNotifications[friend] = false;
-            moveToTop(friend, 'friend');
-
-            const privateRoomName = [currentUser, friend].sort().join('_vs_');
-            
-            document.getElementById('currentChatTitle').innerText = `Özel Sohbet: ${friend}`;
-            document.getElementById('messages').innerHTML = '';
-            document.getElementById('message-box').style.display = 'flex';
-            
-            socket.emit('join_room', { room: privateRoomName });
-            renderFriends();
-        }
-
-        function sendMessage() {
-            const messageText = document.getElementById('messageInput').value.trim();
-            if (messageText && currentTarget) {
-                let roomToSend = isPrivateChat ? [currentUser, currentTarget].sort().join('_vs_') : currentTarget;
-                if (isPrivateChat) moveToTop(currentTarget, 'friend'); else moveToTop(currentTarget, 'room');
-
-                socket.emit('send_message', { room: roomToSend, username: currentUser, message: messageText });
-                document.getElementById('messageInput').value = '';
-            }
-        }
-
-        // --- FOTOĞRAF GÖNDERME FONKSİYONU ---
-        function sendImage(event) {
-            const file = event.target.files[0];
-            if (!file || !currentTarget) return;
-
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                const base64Image = uploadEvent.target.result;
-                let roomToSend = isPrivateChat ? [currentUser, currentTarget].sort().join('_vs_') : currentTarget;
-                if (isPrivateChat) moveToTop(currentTarget, 'friend'); else moveToTop(currentTarget, 'room');
-
-                socket.emit('send_message', {
-                    room: roomToSend,
-                    username: currentUser,
-                    message: '',
-                    image: base64Image
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // --- SOCKET DİNLEYİCİLERİ ---
-        socket.on('load_chat_history', (history) => {
-            const messagesDiv = document.getElementById('messages');
-            messagesDiv.innerHTML = ''; 
-            history.forEach(data => appendMessageToUI(data));
-        });
-
-        socket.on('new_friend_request', (data) => { pendingRequests.push(data.sender); renderRequests(); });
-        socket.on('request_accepted', (data) => { friendsList.push(data.newFriend); renderFriends(); });
-        
-        socket.on('update_online_users', (users) => {
-            onlineUsers = users;
-            renderFriends();
-        });
-
-        socket.on('receive_message', (data) => {
-            let activeRoom = isPrivateChat ? [currentUser, currentTarget].sort().join('_vs_') : currentTarget;
-            if (data.room === activeRoom) {
-                appendMessageToUI(data);
-            }
-        });
-
-        function appendMessageToUI(data) {
-            const messagesDiv = document.getElementById('messages');
-            const messageElement = document.createElement('div');
-            messageElement.className = 'p-3 bg-gray-800 rounded-lg max-w-[70%] border border-gray-700 shadow';
-            
-            let content = `<b>${data.sender}:</b> ${data.message}`;
-            if (data.image) {
-                content += `<br><img src="${data.image}" class="mt-2 rounded max-w-[200px] max-h-[200px] object-cover">`;
-            }
-            messageElement.innerHTML = content;
-            messagesDiv.appendChild(messageElement);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        socket.on('new_notification', (data) => {
-            let activeRoom = isPrivateChat ? [currentUser, currentTarget].sort().join('_vs_') : currentTarget;
-            if (data.room !== activeRoom && data.sender !== currentUser) {
-                unreadNotifications[data.room] = true;
-                if (roomsList.includes(data.room)) moveToTop(data.room, 'room');
-                else { moveToTop(data.sender, 'friend'); unreadNotifications[data.sender] = true; }
-                renderRooms();
-                renderFriends();
-            }
-        });
-
-        socket.on('update_rooms', (rooms) => { roomsList = rooms; renderRooms(); });
     </script>
 </body>
 </html>
