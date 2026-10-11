@@ -107,29 +107,28 @@
         </div>
 
         <!-- Sağ Ana Sohbet Alanı -->
-        <div id="chat-pane" class="hidden md:flex flex-1 flex-col bg-black/40 h-full relative">
-            <!-- Üst Bar: Kullanıcı Adı, Profil, Üç Nokta Menüsü -->
+        <div id="chat-pane" class="hidden md:flex flex-1 flex-col bg-black/40 h-full relative bg-cover bg-center" id="chat-pane-bg">
+            <!-- Üst Bar: Kişi/Grup Adına Dokununca Menü Açılır -->
             <div class="px-4 md:px-6 py-3.5 border-b border-gray-900/80 bg-gray-950/90 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-blue-400 font-bold text-lg mr-1">←</button>
                     <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">💎</div>
                     <div>
-                        <h3 id="active-room-title" class="font-bold text-sm text-white flex items-center gap-1.5">Sohbet Seçin</h3>
+                        <!-- Başlığa tıklayınca özel sohbet menüsü açılır -->
+                        <h3 id="active-room-title" onclick="toggleHeaderMenu()" class="font-bold text-sm text-white flex items-center gap-1.5 cursor-pointer hover:text-blue-400 transition" title="Seçenekler için tıkla">Sohbet Seçin ▾</h3>
                         <span class="text-[10px] text-gray-400" id="active-room-sub">Sol menüden tıklayın</span>
                     </div>
                 </div>
 
-                <!-- Üç Nokta Menü Butonu ve Dropdown -->
-                <div id="chat-menu-container" class="relative hidden">
-                    <button onclick="toggleChatMenu()" class="w-9 h-9 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-300 font-bold flex items-center justify-center transition border border-gray-800">⋮</button>
-                    
-                    <!-- Dropdown İçerik -->
-                    <div id="chat-dropdown" class="absolute right-0 mt-2 w-48 bg-gray-950 border border-blue-900/40 rounded-2xl shadow-2xl py-2 z-50 hidden">
-                        <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2 text-xs text-gray-300 hover:bg-blue-600/20 hover:text-white flex items-center gap-2">📂 Sohbeti Arşivle</button>
-                        <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-red-600/20 flex items-center gap-2">🗑️ Sohbeti Sil</button>
-                        <button onclick="toggleBestieStatus()" id="menu-bestie-btn" class="w-full text-left px-4 py-2 text-xs text-yellow-400 hover:bg-yellow-600/20 flex items-center gap-2">🤝 Kanka Olarak İşaretle</button>
-                        <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2 text-xs text-blue-400 hover:bg-blue-600/20 flex items-center gap-2">✏️ Takma Adı Değiştir</button>
-                    </div>
+                <!-- Başlık Altı Açılır Menü (Kişi Adına Basınca) -->
+                <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-gray-950 border border-blue-900/40 rounded-2xl shadow-2xl py-2 z-50 hidden">
+                    <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-blue-600/20 hover:text-white flex items-center gap-2">📂 Sohbeti Arşivle</button>
+                    <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-600/20 flex items-center gap-2">🗑️ Sohbeti Sil</button>
+                    <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-blue-400 hover:bg-blue-600/20 flex items-center gap-2">✏️ Takma Adı Değiştir</button>
+                    <label class="w-full text-left px-4 py-2.5 text-xs text-indigo-300 hover:bg-indigo-600/20 flex items-center gap-2 cursor-pointer">
+                        🎨 Temayı Değiştir (Fotoğraf Seç)
+                        <input type="file" accept="image/*" onchange="changeChatTheme(event)" class="hidden">
+                    </label>
                 </div>
             </div>
 
@@ -138,21 +137,17 @@
 
             <!-- Mesaj Gönderme Çubuğu (En Altta, Ses ve Resim Butonlarıyla) -->
             <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/90 flex items-center gap-2 md:gap-3">
-                <!-- Resim Ekleme Butonu -->
                 <label class="w-10 h-10 rounded-2xl bg-gray-900 hover:bg-gray-800 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition shrink-0" title="Resim Gönder">
                     📷
                     <input type="file" accept="image/*" onchange="sendImage(event)" class="hidden">
                 </label>
 
-                <!-- Ses Kaydı Butonu -->
                 <button type="button" onclick="recordVoice()" class="w-10 h-10 rounded-2xl bg-gray-900 hover:bg-gray-800 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition shrink-0" title="Ses Kaydı Gönder">
                     🎙️
                 </button>
 
-                <!-- Metin Input -->
                 <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-2xl text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500" />
                 
-                <!-- Gönder Butonu -->
                 <button class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-5 py-3 rounded-2xl transition text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 shrink-0">Gönder</button>
             </form>
         </div>
@@ -219,9 +214,9 @@
         let activeFriendName = "";
         let socket;
         let friends = [];
+        let following = [];
         let archived = [];
         let nicknames = {};
-        let besties = [];
         let unreadRooms = JSON.parse(localStorage.getItem('luxe_unread') || "{}");
         let deferredPrompt;
 
@@ -234,7 +229,7 @@
         function installPWA() {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
+                deferredPrompt.userChoice.then(() => {
                     deferredPrompt = null;
                     document.getElementById('pwa-install-banner').classList.add('hidden');
                 });
@@ -333,7 +328,7 @@
                 }
             });
 
-            socket.on('new notification', function(data) {
+            socket.on('new notification', function() {
                 document.getElementById('notif-badge').classList.remove('hidden');
                 refreshData();
             });
@@ -350,8 +345,8 @@
             const data = await res.json();
             if (data.success) {
                 friends = data.friends;
+                following = data.following;
                 nicknames = data.nicknames || {};
-                besties = data.besties || [];
                 const archRes = await fetch(`/api/archived?user=${currentUser}`);
                 archived = await archRes.json();
 
@@ -373,9 +368,7 @@
                 const isArchived = archived.includes(roomName);
                 const hasUnread = unreadRooms[roomName];
                 const displayName = nicknames[f] || f;
-                const isBestie = besties.includes(f);
-                const subText = isBestie ? '⭐ Kanka • DM' : 'Özel Sohbet (DM)';
-                const item = createListItem(displayName, subText, roomName, '👤', hasUnread, f);
+                const item = createListItem(displayName, 'Özel Sohbet (DM)', roomName, '👤', hasUnread, f);
                 if (isArchived) archEl.appendChild(item);
                 else friendsEl.appendChild(item);
             });
@@ -404,35 +397,22 @@
                 </div>
                 ${hasUnread ? '<span class="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 shadow-lg shadow-blue-500/50 animate-pulse"></span>' : ''}
             `;
+            // Mobil ve masaüstünde dokununca/tıklayınca doğrudan açılması için ontouchstart ve onclick
             div.onclick = () => selectRoom(roomName, name, rawName);
+            div.ontouchstart = () => selectRoom(roomName, name, rawName);
             return div;
         }
 
         function selectRoom(room, name, rawName) {
             currentRoom = room;
-            activeFriendName = rawName; // Birebir DM ise karşı tarafın orijinal kullanıcı adı
+            activeFriendName = rawName;
             unreadRooms[room] = false;
             localStorage.setItem('luxe_unread', JSON.stringify(unreadRooms));
             
-            document.getElementById('active-room-title').innerText = name;
+            document.getElementById('active-room-title').innerHTML = `${name} ▾`;
             document.getElementById('active-room-sub').innerText = rawName ? `@${rawName}` : 'Grup Odası';
             document.getElementById('messages').innerHTML = "";
-            document.getElementById('chat-actions').classList.remove('hidden');
             
-            // Üç nokta menüsünü sadece DM sohbetlerinde aktif et
-            const menuContainer = document.getElementById('chat-menu-container');
-            if (rawName) {
-                menuContainer.classList.remove('hidden');
-                const bestieBtn = document.getElementById('menu-bestie-btn');
-                if (besties.includes(rawName)) {
-                    bestieBtn.innerText = "⭐ Kanka İşaretini Kaldır";
-                } else {
-                    bestieBtn.innerText = "🤝 Kanka Olarak İşaretle";
-                }
-            } else {
-                menuContainer.classList.add('hidden');
-            }
-
             document.getElementById('chat-pane').classList.remove('hidden');
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('hidden');
@@ -447,11 +427,12 @@
             document.getElementById('sidebar').classList.remove('hidden');
             currentRoom = "";
             activeFriendName = "";
-            document.getElementById('chat-dropdown').classList.add('hidden');
+            document.getElementById('header-dropdown').classList.add('hidden');
         }
 
-        function toggleChatMenu() {
-            const dropdown = document.getElementById('chat-dropdown');
+        function toggleHeaderMenu() {
+            if (!activeFriendName) return; // Sadece DM'lerde menü açılsın
+            const dropdown = document.getElementById('header-dropdown');
             dropdown.classList.toggle('hidden');
         }
 
@@ -462,34 +443,19 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser, roomId: currentRoom })
             });
-            toggleChatMenu();
+            toggleHeaderMenu();
             refreshData();
             closeChatPane();
         }
 
         function clearOrDeleteChat() {
             document.getElementById('messages').innerHTML = "";
-            toggleChatMenu();
+            toggleHeaderMenu();
             alert("Sohbet temizlendi.");
         }
 
-        async function toggleBestieStatus() {
-            if (!activeFriendName) return;
-            const res = await fetch('/api/toggle-bestie', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser: activeFriendName })
-            });
-            const data = await res.json();
-            if (data.success) {
-                toggleChatMenu();
-                refreshData();
-                alert(data.isBestie ? "Kanka olarak işaretlendi!" : "Kanka işareti kaldırıldı.");
-            }
-        }
-
         function openNicknameModal() {
-            toggleChatMenu();
+            toggleHeaderMenu();
             document.getElementById('nickname-modal').classList.remove('hidden');
             document.getElementById('nickname-input').value = nicknames[activeFriendName] || "";
         }
@@ -508,21 +474,33 @@
             if (data.success) {
                 closeNicknameModal();
                 refreshData();
-                document.getElementById('active-room-title').innerText = nickname || activeFriendName;
+                document.getElementById('active-room-title').innerHTML = `${nickname || activeFriendName} ▾`;
             }
         }
 
-        // Ses kaydı ve Resim buton simülasyonları
+        function changeChatTheme(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const chatPane = document.getElementById('chat-pane');
+                    chatPane.style.backgroundImage = `url('${e.target.result}')`;
+                    chatPane.style.backgroundSize = 'cover';
+                    chatPane.style.backgroundPosition = 'center';
+                }
+                reader.readAsDataURL(file);
+            }
+            toggleHeaderMenu();
+        }
+
         function recordVoice() {
-            const text = "🎤 [Sesli Mesaj Gönderildi]";
-            sendCustomMessage(text);
+            sendCustomMessage("🎤 [Sesli Mesaj]");
         }
 
         function sendImage(event) {
             const file = event.target.files[0];
             if (file) {
-                const text = `📷 [Resim: ${file.name}]`;
-                sendCustomMessage(text);
+                sendCustomMessage(`📷 [Resim: ${file.name}]`);
             }
         }
 
@@ -534,7 +512,6 @@
             }
         }
 
-        // Modallar
         function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
         function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
         function openNotificationsModal() {
@@ -597,7 +574,8 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser, targetUser })
             });
-            alert("Takip işlemi başarılı!");
+            refreshData();
+            alert("Takip işlemi güncellendi!");
         }
 
         async function renderNotifications(reqs, notifs) {
@@ -611,10 +589,14 @@
             }
 
             reqs.forEach(req => {
+                const isFollowingBack = following.includes(req.from);
                 reqList.innerHTML += `
                     <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white">
                         <span>@${req.from}</span>
-                        <button onclick="acceptRequest('${req.from}')" class="bg-green-600 hover:bg-green-500 px-3 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
+                        <div class="flex gap-1.5">
+                            <button onclick="acceptRequest('${req.from}')" class="bg-green-600 hover:bg-green-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
+                            <button onclick="toggleFollow('${req.from}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-semibold">${isFollowingBack ? 'Takiptesin' : 'Geri Takip Et'}</button>
+                        </div>
                     </div>
                 `;
             });

@@ -8,7 +8,7 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, besties: [] }
+const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {} }
 const groups = []; // { id, name, creator, members: [] }
 const activeSockets = {};
 
@@ -26,8 +26,7 @@ app.post('/api/register', (req, res) => {
         following: [],
         followers: [],
         archivedRooms: [],
-        nicknames: {},
-        besties: []
+        nicknames: {}
     });
     res.json({ success: true });
 });
@@ -102,8 +101,7 @@ app.get('/api/profile-info', (req, res) => {
         followers: user.followers,
         requests: user.requests,
         notifications: user.notifications,
-        nicknames: user.nicknames || {},
-        besties: user.besties || []
+        nicknames: user.nicknames || {}
     });
 });
 
@@ -127,7 +125,6 @@ app.post('/api/accept-request', (req, res) => {
     }
 });
 
-// Takma Ad (Nickname) Ayarla
 app.post('/api/set-nickname', (req, res) => {
     const { username, targetUser, nickname } = req.body;
     const user = users.find(u => u.username === username);
@@ -135,24 +132,6 @@ app.post('/api/set-nickname', (req, res) => {
         if (!user.nicknames) user.nicknames = {};
         user.nicknames[targetUser] = nickname;
         res.json({ success: true });
-    } else {
-        res.json({ success: false });
-    }
-});
-
-// Kanka Olarak İşaretle / Kaldır
-app.post('/api/toggle-bestie', (req, res) => {
-    const { username, targetUser } = req.body;
-    const user = users.find(u => u.username === username);
-    if (user) {
-        if (!user.besties) user.besties = [];
-        const idx = user.besties.indexOf(targetUser);
-        if (idx > -1) {
-            user.besties.splice(idx, 1);
-        } else {
-            user.besties.push(targetUser);
-        }
-        res.json({ success: true, isBestie: idx === -1 });
     } else {
         res.json({ success: false });
     }
