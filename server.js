@@ -184,6 +184,43 @@ io.on('connection', (socket) => {
         io.to(data.room).emit('chat message', data);
     });
 
+    // WebRTC Görüntülü/Sesli Arama Sinyalleri
+    socket.on('call-user', (data) => {
+        const targetSocket = activeSockets[data.targetUser];
+        if (targetSocket) {
+            io.to(targetSocket).emit('incoming-call', {
+                from: data.from,
+                offer: data.offer,
+                isVideo: data.isVideo
+            });
+        }
+    });
+
+    socket.on('answer-call', (data) => {
+        const targetSocket = activeSockets[data.targetUser];
+        if (targetSocket) {
+            io.to(targetSocket).emit('call-answered', {
+                answer: data.answer
+            });
+        }
+    });
+
+    socket.on('ice-candidate', (data) => {
+        const targetSocket = activeSockets[data.targetUser];
+        if (targetSocket) {
+            io.to(targetSocket).emit('ice-candidate', {
+                candidate: data.candidate
+            });
+        }
+    });
+
+    socket.on('end-call', (data) => {
+        const targetSocket = activeSockets[data.targetUser];
+        if (targetSocket) {
+            io.to(targetSocket).emit('call-ended');
+        }
+    });
+
     socket.on('disconnect', () => {
         for (let user in activeSockets) {
             if (activeSockets[user] === socket.id) {

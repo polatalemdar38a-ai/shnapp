@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LuxeChat - Premium Messenger</title>
+    <title>SHNAPP - Messenger</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#030712">
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22LuxeChat%22%2C%22short_name%22%3A%22LuxeChat%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%233b82f6%22%7D">
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23000000%22%2C%22theme_color%22%3A%22%233b82f6%22%7D">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -18,7 +18,6 @@
         .glass-panel { background: rgba(8, 12, 24, 0.95); backdrop-filter: blur(16px); }
         .luxury-shadow { box-shadow: 0 0 40px rgba(37, 99, 235, 0.12); }
         
-        /* Mobil klavye açıldığında esnekliği korumak için */
         html, body {
             height: 100%;
             height: -webkit-fill-available;
@@ -33,8 +32,8 @@
         <div class="flex items-center space-x-3">
             <span class="text-2xl">📱</span>
             <div>
-                <h4 class="font-bold text-xs">Ana Ekrana Ekle</h4>
-                <p class="text-[10px] text-blue-100">Uygulama gibi tek dokunuşla aç!</p>
+                <h4 class="font-bold text-xs">SHNAPP'i Ana Ekrana Ekle</h4>
+                <p class="text-[10px] text-blue-100">Uygulama gibi tek dokunuşla başlat!</p>
             </div>
         </div>
         <div class="flex space-x-2">
@@ -46,9 +45,9 @@
     <!-- Giriş / Kayıt Ekranı -->
     <div class="w-full max-w-sm glass-panel border border-blue-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-gradient-to-tr from-blue-700 to-indigo-500 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-blue-600/30 mb-3">💎</div>
-            <h1 class="text-2xl font-extrabold tracking-wider text-white">LUXE CHAT</h1>
-            <p class="text-xs text-blue-400 mt-1 font-medium">Seçkin ve Şık Mesajlaşma Deneyimi</p>
+            <div class="w-16 h-16 bg-gradient-to-tr from-blue-700 to-indigo-500 rounded-2xl mx-auto flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-blue-600/30 mb-3">⚡</div>
+            <h1 class="text-2xl font-extrabold tracking-wider text-white">SHNAPP</h1>
+            <p class="text-xs text-blue-400 mt-1 font-medium">Hızlı ve Şık Mesajlaşma Deneyimi</p>
         </div>
         
         <div class="flex mb-6 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
@@ -78,7 +77,7 @@
         <div id="sidebar" class="w-full md:w-80 bg-gray-950/95 border-r border-gray-900 flex flex-col h-full">
             <div class="p-4 border-b border-gray-900 flex justify-between items-center bg-gray-900/30">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-600/20" id="profile-initial">L</div>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-600/20" id="profile-initial">S</div>
                     <div>
                         <span id="current-username" class="font-bold text-xs text-white block">Kullanıcı</span>
                         <span class="text-[9px] text-blue-400 font-semibold tracking-wider">● Çevrimiçi</span>
@@ -113,18 +112,25 @@
             </div>
         </div>
 
-        <!-- Sağ Ana Sohbet Alanı (Klavye açıldığında esneyen yapı) -->
+        <!-- Sağ Ana Sohbet Alanı -->
         <div id="chat-pane" class="hidden md:flex flex-1 flex-col justify-between bg-black/40 h-full relative bg-cover bg-center">
             
             <!-- Üst Bar -->
             <div class="px-4 md:px-6 py-3.5 border-b border-gray-900/80 bg-gray-950/90 flex items-center justify-between shrink-0">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-blue-400 font-bold text-lg mr-1">←</button>
-                    <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">💎</div>
+                    <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-sm" id="chat-header-icon">⚡</div>
                     <div>
                         <h3 id="active-room-title" onclick="toggleHeaderMenu()" class="font-bold text-sm text-white flex items-center gap-1.5 cursor-pointer hover:text-blue-400 transition" title="Seçenekler için tıkla">Sohbet Seçin ▾</h3>
                         <span class="text-[10px] text-gray-400" id="active-room-sub">Sol menüden tıklayın</span>
                     </div>
+                </div>
+
+                <!-- Arama ve Görüntülü/Sesli Görüşme Butonları -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="startCall(false)" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-green-600 text-green-400 hover:text-white flex items-center justify-center text-xs border border-gray-800 transition" title="Sesli Arama">📞</button>
+                    <button onclick="startCall(true)" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-blue-600 text-blue-400 hover:text-white flex items-center justify-center text-xs border border-gray-800 transition" title="Görüntülü Arama">📹</button>
+                    <button onclick="toggleInlineSearch()" class="w-8 h-8 rounded-xl bg-gray-900 hover:bg-gray-800 text-gray-300 flex items-center justify-center text-xs border border-gray-800 transition" title="Sohbet İçi Mesaj Ara">🔍</button>
                 </div>
 
                 <!-- Başlık Altı Açılır Menü -->
@@ -139,10 +145,16 @@
                 </div>
             </div>
 
+            <!-- Sohbet İçi Anlık Mesaj Arama Girişi -->
+            <div id="inline-search-bar" class="hidden px-4 py-2 bg-gray-900/90 border-b border-gray-800 flex items-center gap-2">
+                <input type="text" id="chat-search-input" oninput="filterMessages()" placeholder="Mesajlarda ara..." class="flex-1 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500">
+                <button onclick="toggleInlineSearch()" class="text-xs text-gray-400 hover:text-white font-bold">✕</button>
+            </div>
+
             <!-- Mesaj Listesi -->
             <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-black/20 text-sm"></ul>
 
-            <!-- Mesaj Gönderme Çubuğu (Klavyenin tam üzerine oturur) -->
+            <!-- Mesaj Gönderme Çubuğu -->
             <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/95 flex items-center gap-2 md:gap-3 shrink-0 sticky bottom-0">
                 <label class="w-10 h-10 rounded-2xl bg-gray-900 hover:bg-gray-800 border border-gray-800 flex items-center justify-center text-gray-400 hover:text-white cursor-pointer transition shrink-0" title="Resim Gönder">
                     📷
@@ -214,8 +226,29 @@
         </div>
     </div>
 
+    <!-- Görüntülü / Sesli Arama Modalı -->
+    <div id="call-modal" class="fixed inset-0 bg-black/95 backdrop-blur-lg hidden flex flex-col justify-between items-center z-50 p-6">
+        <div class="text-center mt-4">
+            <h3 id="call-status-title" class="text-lg font-bold text-white">Aranıyor...</h3>
+            <p id="call-status-sub" class="text-xs text-blue-400 mt-1">Bağlantı kuruluyor</p>
+        </div>
+
+        <div class="relative w-full max-w-2xl h-[60vh] bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 flex items-center justify-center my-auto">
+            <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <video id="local-video" autoplay playsinline muted class="absolute bottom-4 right-4 w-32 h-44 bg-black/50 rounded-2xl border-2 border-blue-500 object-cover shadow-2xl"></video>
+        </div>
+
+        <div class="flex items-center space-x-6 mb-6">
+            <div id="incoming-call-controls" class="hidden flex space-x-4">
+                <button onclick="acceptCall()" class="w-14 h-14 rounded-full bg-green-600 hover:bg-green-500 text-white font-bold flex items-center justify-center text-xl shadow-lg shadow-green-600/40">📞</button>
+                <button onclick="rejectCall()" class="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center text-xl shadow-lg shadow-red-600/40">✕</button>
+            </div>
+            <button id="end-call-btn" onclick="endCall()" class="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center text-xl shadow-lg shadow-red-600/40">📵</button>
+        </div>
+    </div>
+
     <script>
-        let currentUser = localStorage.getItem('luxe_user') || "";
+        let currentUser = localStorage.getItem('shnapp_user') || "";
         let currentRoom = "";
         let activeFriendName = "";
         let socket;
@@ -223,8 +256,14 @@
         let following = [];
         let archived = [];
         let nicknames = {};
-        let unreadRooms = JSON.parse(localStorage.getItem('luxe_unread') || "{}");
+        let unreadRooms = JSON.parse(localStorage.getItem('shnapp_unread') || "{}");
         let deferredPrompt;
+
+        // WebRTC Değişkenleri
+        let peerConnection;
+        let localStream;
+        let incomingCallData = null;
+        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -306,7 +345,7 @@
 
             if (data.success) {
                 currentUser = data.username;
-                localStorage.setItem('luxe_user', currentUser);
+                localStorage.setItem('shnapp_user', currentUser);
                 initApp(currentUser);
             } else {
                 msgEl.innerText = data.message;
@@ -329,9 +368,143 @@
                     }
                 } else {
                     unreadRooms[data.room] = true;
-                    localStorage.setItem('luxe_unread', JSON.stringify(unreadRooms));
+                    localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
                     refreshData();
                 }
             });
 
-            socket.on('new notification', function
+            socket.on('new notification', function() {
+                document.getElementById('notif-badge').classList.remove('hidden');
+                refreshData();
+            });
+
+            socket.on('refresh data', function() {
+                refreshData();
+            });
+
+            // WebRTC Socket Dinleyicileri
+            socket.on('incoming-call', async (data) => {
+                incomingCallData = data;
+                document.getElementById('call-modal').classList.remove('hidden');
+                document.getElementById('incoming-call-controls').classList.remove('hidden');
+                document.getElementById('end-call-btn').classList.add('hidden');
+                document.getElementById('call-status-title').innerText = `@${data.from} sizi arıyor...`;
+                document.getElementById('call-status-sub').innerText = data.isVideo ? "Görüntülü Arama" : "Sesli Arama";
+            });
+
+            socket.on('call-answered', async (data) => {
+                document.getElementById('call-status-title').innerText = `@${activeFriendName} ile görüşülüyor`;
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+            });
+
+            socket.on('ice-candidate', async (data) => {
+                if (peerConnection) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                }
+            });
+
+            socket.on('call-ended', () => {
+                closeCallModal();
+            });
+
+            refreshData();
+        }
+
+        async function refreshData() {
+            const res = await fetch(`/api/profile-info?user=${currentUser}`);
+            const data = await res.json();
+            if (data.success) {
+                friends = data.friends;
+                following = data.following;
+                nicknames = data.nicknames || {};
+                const archRes = await fetch(`/api/archived?user=${currentUser}`);
+                archived = await archRes.json();
+
+                renderMainLists();
+                renderNotifications(data.requests, data.notifications);
+            }
+        }
+
+        async function renderMainLists() {
+            const friendsEl = document.getElementById('friends-list');
+            const groupsEl = document.getElementById('groups-list');
+            const archEl = document.getElementById('archived-list');
+            friendsEl.innerHTML = "";
+            groupsEl.innerHTML = "";
+            archEl.innerHTML = "";
+
+            friends.forEach(f => {
+                const roomName = [currentUser, f].sort().join('_');
+                const isArchived = archived.includes(roomName);
+                const hasUnread = unreadRooms[roomName];
+                const displayName = nicknames[f] || f;
+                const item = createListItem(displayName, 'Özel Sohbet (DM)', roomName, '👤', hasUnread, f);
+                if (isArchived) archEl.appendChild(item);
+                else friendsEl.appendChild(item);
+            });
+
+            const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
+            const groups = await groupRes.json();
+            groups.forEach(g => {
+                const isArchived = archived.includes(g.id);
+                const hasUnread = unreadRooms[g.id];
+                const item = createListItem(g.name, 'Grup Sohbeti', g.id, '👥', hasUnread, null);
+                if (isArchived) archEl.appendChild(item);
+                else groupsEl.appendChild(item);
+            });
+        }
+
+        function createListItem(name, sub, roomName, icon, hasUnread, rawName) {
+            const div = document.createElement('div');
+            div.className = "p-3 rounded-2xl cursor-pointer hover:bg-blue-600/10 text-white flex items-center justify-between transition border border-transparent hover:border-blue-500/30";
+            div.innerHTML = `
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center font-bold text-xs text-blue-400 shrink-0">${icon}</div>
+                    <div class="min-w-0">
+                        <h4 class="text-xs font-bold truncate">${name}</h4>
+                        <p class="text-[10px] text-gray-400 truncate">${sub}</p>
+                    </div>
+                </div>
+                ${hasUnread ? '<span class="w-2.5 h-2.5 bg-blue-500 rounded-full shrink-0 shadow-lg shadow-blue-500/50 animate-pulse"></span>' : ''}
+            `;
+            div.onclick = () => selectRoom(roomName, name, rawName);
+            div.ontouchstart = () => selectRoom(roomName, name, rawName);
+            return div;
+        }
+
+        function selectRoom(room, name, rawName) {
+            currentRoom = room;
+            activeFriendName = rawName;
+            unreadRooms[room] = false;
+            localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
+            
+            document.getElementById('active-room-title').innerHTML = `${name} ▾`;
+            document.getElementById('active-room-sub').innerText = rawName ? `@${rawName}` : 'Grup Odası';
+            document.getElementById('messages').innerHTML = "";
+            
+            document.getElementById('chat-pane').classList.remove('hidden');
+            if(window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+
+            socket.emit('join room', room);
+            refreshData();
+        }
+
+        function closeChatPane() {
+            document.getElementById('chat-pane').classList.add('hidden');
+            document.getElementById('sidebar').classList.remove('hidden');
+            currentRoom = "";
+            activeFriendName = "";
+            document.getElementById('header-dropdown').classList.add('hidden');
+            document.getElementById('inline-search-bar').classList.add('hidden');
+        }
+
+        function toggleHeaderMenu() {
+            if (!activeFriendName) return;
+            const dropdown = document.getElementById('header-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function toggleInlineSearch() {
+            const bar = document.getElementById('inline-search
