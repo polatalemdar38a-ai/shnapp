@@ -291,6 +291,7 @@
             }
         };
 
+        // Giriş ve Kayıt Ekranı Sekmelerini Değiştiren Fonksiyon
         function switchTab(tab) {
             const loginForm = document.getElementById('login-form');
             const regForm = document.getElementById('register-form');
@@ -507,4 +508,366 @@
         }
 
         function toggleInlineSearch() {
-            const bar = document.getElementById('inline-search
+            const bar = document.getElementById('inline-search-bar');
+            bar.classList.toggle('hidden');
+            if (bar.classList.contains('hidden')) {
+                document.getElementById('chat-search-input').value = "";
+                filterMessages();
+            }
+        }
+
+        function filterMessages() {
+            const query = document.getElementById('chat-search-input').value.toLowerCase();
+            const items = document.querySelectorAll('#messages li');
+            items.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    item.style.display = "flex";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        }
+
+        async function archiveCurrentRoom() {
+            if (!currentRoom) return;
+            await fetch('/api/archive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, roomId: currentRoom })
+            });
+            toggleHeaderMenu();
+            refreshData();
+            closeChatPane();
+        }
+
+        function clearOrDeleteChat() {
+            document.getElementById('messages').innerHTML = "";
+            toggleHeaderMenu();
+            alert("Sohbet temizlendi.");
+        }
+
+        function openNicknameModal() {
+            toggleHeaderMenu();
+            document.getElementById('nickname-modal').classList.remove('hidden');
+            document.getElementById('nickname-input').value = nicknames[activeFriendName] || "";
+        }
+        function closeNicknameModal() {
+            document.getElementById('nickname-modal').classList.add('hidden');
+        }
+
+        async function saveNickname() {
+            const nickname = document.getElementById('nickname-input').value.trim();
+            const res = await fetch('/api/set-nickname', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, targetUser: activeFriendName, nickname })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeNicknameModal();
+                refreshData();
+                document.getElementById('active-room-title').innerHTML = `${nickname || activeFriendName} ▾`;
+            }
+        }
+
+        function changeChatTheme(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const chatPane = document.getElementById('chat-pane');
+                    chatPane.style.backgroundImage = `url('${e.target.result}')`;
+                    chatPane.style.backgroundSize = 'cover';
+                    chatPane.style.backgroundPosition = 'center';
+                }
+                reader.readAsDataURL(file);
+            }
+            toggleHeaderMenu();
+        }
+
+        // WebRTC Arama Fonksiyonları
+        async function startCall(isVideo) {
+            if (!activeFriendName) {
+                alert("Lütfen önce bir sohbet seçin!");
+                return;
+            }
+
+            document.getElementById('call-modal').classList.remove('hidden');
+            document.getElementById('incoming-call-controls').classList.add('hidden');
+            document.getElementById('end-call-btn').classList.remove('hidden');
+            document.getElementById('call-status-title').innerText = `@${activeFriendName} aranıyor...`;
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+                document.getElementById('local-video').srcObject = localStream;
+
+                createPeerConnection(activeFriendName);
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                socket.emit('call-user', {
+                    targetUser: activeFriendName,
+                    from: currentUser,
+                    offer: offer,
+                    isVideo: isVideo
+                });
+            } catch (err) {
+                alert("Kamera/Mikrofon erişimi reddedildi veya cihaz bulunamadı.");
+                closeCallModal();
+            }
+        }
+
+        function createPeerConnection(targetUser) {
+            peerConnection = new RTCPeerConnection(rtcConfig);
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('ice-candidate', {
+                        targetUser: targetUser,
+                        candidate: event.candidate
+                    });
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                document.getElementById('remote-video').srcObject = event.streams[0];
+            };
+        }
+
+        async function acceptCall() {
+            document.getElementById('incoming-call-controls').classList.add('hidden');
+            document.getElementById('end-call-btn').classList.remove('hidden');
+            document.getElementById('call-status-title').innerText = `@${incomingCallData.from} ile görüşülüyor`;
+
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: incomingCallData.isVideo, audio: true });
+                document.getElementById('local-video').srcObject = localStream;
+
+                createPeerConnection(incomingCallData.from);
+                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                socket.emit('answer-call', {
+                    targetUser: incomingCallData.from,
+                    answer: answer
+                });
+            } catch (err) {
+                alert("Medya cihazlarına erişilemedi.");
+                endCall();
+            }
+        }
+
+        function rejectCall() {
+            if (incomingCallData) {
+                socket.emit('end-call', { targetUser: incomingCallData.from });
+            }
+            closeCallModal();
+        }
+
+        function endCall() {
+            const target = activeFriendName || (incomingCallData ? incomingCallData.from : null);
+            if (target) {
+                socket.emit('end-call', { targetUser: target });
+            }
+            closeCallModal();
+        }
+
+        function closeCallModal() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            document.getElementById('call-modal').classList.add('hidden');
+            document.getElementById('local-video').srcObject = null;
+            document.getElementById('remote-video').srcObject = null;
+            incomingCallData = null;
+        }
+
+        function recordVoice() {
+            sendCustomMessage("🎤 [Sesli Mesaj]");
+        }
+
+        function sendImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                sendCustomMessage(`📷 [Resim: ${file.name}]`);
+            }
+        }
+
+        function sendCustomMessage(text) {
+            if (currentRoom) {
+                const messageData = { room: currentRoom, sender: currentUser, text: text };
+                appendMessage(messageData);
+                socket.emit('chat message', messageData);
+            }
+        }
+
+        function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
+        function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
+        function openNotificationsModal() {
+            document.getElementById('notifications-modal').classList.remove('hidden');
+            document.getElementById('notif-badge').classList.add('hidden');
+            refreshData();
+        }
+        function closeNotificationsModal() { document.getElementById('notifications-modal').classList.add('hidden'); }
+        
+        function openGroupModal() {
+            document.getElementById('group-modal').classList.remove('hidden');
+            const box = document.getElementById('group-friends-checkboxes');
+            box.innerHTML = "";
+            friends.forEach(f => {
+                box.innerHTML += `
+                    <label class="flex items-center space-x-2 text-xs cursor-pointer">
+                        <input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-900 border-gray-700 text-blue-600">
+                        <span>@${f}</span>
+                    </label>
+                `;
+            });
+        }
+        function closeGroupModal() { document.getElementById('group-modal').classList.add('hidden'); }
+
+        async function performSearch() {
+            const query = document.getElementById('modal-search-input').value;
+            const res = await fetch(`/api/search?q=${query}&user=${currentUser}`);
+            const usersList = await res.json();
+            const resultsEl = document.getElementById('modal-search-results');
+            resultsEl.innerHTML = "";
+
+            usersList.forEach(u => {
+                const isFriend = friends.includes(u.username);
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-gray-900/80 px-3 py-2.5 rounded-xl text-xs text-white border border-gray-800";
+                div.innerHTML = `
+                    <span>@${u.username}</span>
+                    <div class="flex gap-1.5">
+                        <button onclick="toggleFollow('${u.username}')" class="bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded-lg text-[10px] font-semibold">Takip Et</button>
+                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-green-400 font-semibold text-[10px] self-center">Arkadaşsın</span>'}
+                    </div>
+                `;
+                resultsEl.appendChild(div);
+            });
+        }
+
+        async function sendRequest(targetUser) {
+            const res = await fetch('/api/send-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, targetUser })
+            });
+            const data = await res.json();
+            alert(data.success ? "Arkadaşlık isteği gönderildi!" : data.message);
+        }
+
+        async function toggleFollow(targetUser) {
+            await fetch('/api/toggle-follow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, targetUser })
+            });
+            refreshData();
+            alert("Takip işlemi güncellendi!");
+        }
+
+        async function renderNotifications(reqs, notifs) {
+            const reqList = document.getElementById('requests-list');
+            const notifList = document.getElementById('notifications-list');
+            reqList.innerHTML = "";
+            notifList.innerHTML = "";
+
+            if (reqs.length > 0 || notifs.length > 0) {
+                document.getElementById('notif-badge').classList.remove('hidden');
+            }
+
+            reqs.forEach(req => {
+                const isFollowingBack = following.includes(req.from);
+                reqList.innerHTML += `
+                    <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white">
+                        <span>@${req.from}</span>
+                        <div class="flex gap-1.5">
+                            <button onclick="acceptRequest('${req.from}')" class="bg-green-600 hover:bg-green-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
+                            <button onclick="toggleFollow('${req.from}')" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded-lg text-[10px] font-semibold">${isFollowingBack ? 'Takiptesin' : 'Geri Takip Et'}</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            notifs.forEach(n => {
+                notifList.innerHTML += `
+                    <div class="bg-gray-900/60 px-3 py-2 rounded-xl text-xs text-gray-300 border border-gray-800 flex justify-between">
+                        <span>${n.text}</span>
+                        <span class="text-[9px] text-gray-500">${n.date}</span>
+                    </div>
+                `;
+            });
+        }
+
+        async function acceptRequest(requester) {
+            await fetch('/api/accept-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, requester })
+            });
+            refreshData();
+            openNotificationsModal();
+        }
+
+        async function createGroup() {
+            const groupName = document.getElementById('group-name-input').value;
+            const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+            const members = Array.from(checkboxes).map(cb => cb.value);
+
+            const res = await fetch('/api/create-group', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ groupName, creator: currentUser, members })
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeGroupModal();
+                refreshData();
+                selectRoom(data.groupId, data.groupName, null);
+            } else {
+                alert(data.message);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('shnapp_user');
+            location.reload();
+        }
+
+        function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('m');
+            const text = input.value.trim();
+            if (text && currentRoom) {
+                sendCustomMessage(text);
+                input.value = '';
+            }
+        }
+
+        function appendMessage(data) {
+            const item = document.createElement('li');
+            const isMe = data.sender === currentUser;
+            item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+            item.innerHTML = `
+                <div class="max-w-[75%] px-4 py-2.5 rounded-2xl text-xs ${isMe ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-br-xs shadow-lg shadow-blue-600/20' : 'bg-gray-900 text-gray-200 rounded-bl-xs border border-gray-800'}">
+                    ${!isMe ? `<span class="block text-[10px] text-blue-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
+                    ${data.text}
+                </div>
+            `;
+            document.getElementById('messages').appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+    </script>
+</body>
+</html>
