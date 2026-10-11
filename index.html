@@ -21,6 +21,21 @@
 </head>
 <body class="bg-black text-gray-100 h-screen flex justify-center items-center overflow-hidden font-sans">
 
+    <!-- Ana Ekran Kısayolu Bildirim Banner'ı -->
+    <div id="pwa-install-banner" class="fixed top-4 left-4 right-4 max-w-md mx-auto bg-blue-600 text-white p-4 rounded-2xl shadow-2xl z-50 hidden flex justify-between items-center border border-blue-400">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">📱</span>
+            <div>
+                <h4 class="font-bold text-xs">Ana Ekrana Ekle</h4>
+                <p class="text-[10px] text-blue-100">Uygulama gibi tek dokunuşla açmak için ekle!</p>
+            </div>
+        </div>
+        <div class="flex space-x-2">
+            <button onclick="installPWA()" class="bg-white text-blue-600 font-bold px-3 py-1.5 rounded-xl text-xs">Ekle</button>
+            <button onclick="closeInstallBanner()" class="text-blue-200 px-2 font-bold text-xs">✕</button>
+        </div>
+    </div>
+
     <!-- Giriş / Kayıt Ekranı -->
     <div class="w-full max-w-sm glass-panel border border-blue-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
@@ -49,12 +64,11 @@
         <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
     </div>
 
-    <!-- Ana Sohbet Arayüzü (Mobil uyumlu tam ekran esnek yapı) -->
+    <!-- Ana Sohbet Arayüzü -->
     <div id="chat-container" class="w-full max-w-5xl h-[95vh] md:h-[92vh] glass-panel rounded-3xl luxury-shadow border border-blue-900/30 hidden flex overflow-hidden">
         
         <!-- Sol Panel (Sohbet Listesi) -->
         <div id="sidebar" class="w-full md:w-80 bg-gray-950/95 border-r border-gray-900 flex flex-col h-full">
-            <!-- Üst Bar ve İşlem Simgeleri -->
             <div class="p-4 border-b border-gray-900 flex justify-between items-center bg-gray-900/30">
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-blue-600/20" id="profile-initial">L</div>
@@ -74,7 +88,6 @@
                 </div>
             </div>
 
-            <!-- Ana Menü: Arkadaşlarım ve Gruplarım -->
             <div class="flex-1 overflow-y-auto p-3 space-y-4">
                 <div>
                     <div class="text-[10px] font-bold text-blue-400 px-2 uppercase tracking-widest mb-2">Arkadaşlarım</div>
@@ -93,9 +106,8 @@
             </div>
         </div>
 
-        <!-- Sağ Ana Sohbet Alanı (Başlangıçta gizli, sadece seçince açılır) -->
+        <!-- Sağ Ana Sohbet Alanı -->
         <div id="chat-pane" class="hidden md:flex flex-1 flex-col bg-black/40 h-full">
-            <!-- Sohbet Başlığı -->
             <div class="px-4 md:px-6 py-4 border-b border-gray-900/80 bg-gray-950/80 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-blue-400 font-bold text-lg mr-1">←</button>
@@ -110,10 +122,8 @@
                 </div>
             </div>
 
-            <!-- Mesaj Listesi -->
             <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 bg-black/20 text-sm"></ul>
 
-            <!-- Mesaj Gönderme Formu -->
             <form id="chat-form" onsubmit="sendMessage(event)" class="p-3 md:p-4 border-t border-gray-900/80 bg-gray-950/80 flex items-center gap-3">
                 <input id="m" autocomplete="off" placeholder="Mesajınızı yazın..." class="flex-1 px-4 py-3 bg-gray-900 border border-gray-800 rounded-2xl text-xs text-white focus:outline-none focus:border-blue-500 placeholder-gray-500" />
                 <button class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-5 py-3 rounded-2xl transition text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30">Gönder</button>
@@ -121,7 +131,7 @@
         </div>
     </div>
 
-    <!-- MODAL: Arama ve Kişi Ekleme -->
+    <!-- Modallar -->
     <div id="search-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -129,25 +139,21 @@
                 <button onclick="closeSearchModal()" class="text-gray-400 hover:text-white font-bold">✕</button>
             </div>
             <input type="text" id="modal-search-input" oninput="performSearch()" placeholder="Kullanıcı adı ara..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 mb-4">
-            
             <div class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Arama Sonuçları</div>
             <div id="modal-search-results" class="space-y-2 max-h-60 overflow-y-auto"></div>
         </div>
     </div>
 
-    <!-- MODAL: Bildirimler -->
     <div id="notifications-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="font-bold text-white text-sm">Bildirimler & İstekler</h3>
                 <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-white font-bold">✕</button>
             </div>
-            
             <div class="mb-4">
                 <h4 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Bekleyen Arkadaşlık İstekleri</h4>
                 <div id="requests-list" class="space-y-2 max-h-32 overflow-y-auto mb-4"></div>
             </div>
-
             <div>
                 <h4 class="text-[11px] font-bold text-indigo-400 uppercase tracking-wider mb-2">Bildirim Geçmişi</h4>
                 <div id="notifications-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
@@ -155,7 +161,6 @@
         </div>
     </div>
 
-    <!-- MODAL: Grup Kurma -->
     <div id="group-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-blue-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -163,10 +168,8 @@
                 <button onclick="closeGroupModal()" class="text-gray-400 hover:text-white font-bold">✕</button>
             </div>
             <input type="text" id="group-name-input" placeholder="Grup Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500 mb-4">
-            
             <h4 class="text-[11px] font-bold text-blue-400 uppercase tracking-wider mb-2">Arkadaşlarını Seç</h4>
             <div id="group-friends-checkboxes" class="space-y-2 max-h-40 overflow-y-auto mb-4 bg-gray-900/60 p-3 rounded-xl border border-gray-800"></div>
-
             <button onclick="createGroup()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30">Grubu Oluştur</button>
         </div>
     </div>
@@ -178,8 +181,32 @@
         let friends = [];
         let archived = [];
         let unreadRooms = JSON.parse(localStorage.getItem('luxe_unread') || "{}");
+        let deferredPrompt;
 
-        // Sayfa yüklendiğinde hafızada kullanıcı varsa direkt oturum aç
+        // PWA Ana Ekran Kısayolu Tetikleyicisi
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwa-install-banner').classList.remove('hidden');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Kullanıcı ana ekrana eklemeyi kabul etti');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('pwa-install-banner').classList.add('hidden');
+                });
+            }
+        }
+
+        function closeInstallBanner() {
+            document.getElementById('pwa-install-banner').classList.add('hidden');
+        }
+
         window.onload = () => {
             if (currentUser) {
                 initApp(currentUser);
@@ -255,10 +282,12 @@
             
             socket = io();
             socket.on('chat message', function(data) {
+                // Eğer mesajı başkası attıysa veya başka odadan geldiyse
                 if (data.room === currentRoom) {
-                    appendMessage(data);
+                    if(data.sender !== currentUser) {
+                        appendMessage(data);
+                    }
                 } else {
-                    // Aktif odada değilse okunmadı işareti koy
                     unreadRooms[data.room] = true;
                     localStorage.setItem('luxe_unread', JSON.stringify(unreadRooms));
                     refreshData();
@@ -273,7 +302,6 @@
             const data = await res.json();
             if (data.success) {
                 friends = data.friends;
-                
                 const archRes = await fetch(`/api/archived?user=${currentUser}`);
                 archived = await archRes.json();
 
@@ -290,7 +318,6 @@
             groupsEl.innerHTML = "";
             archEl.innerHTML = "";
 
-            // Arkadaşlarım
             friends.forEach(f => {
                 const roomName = [currentUser, f].sort().join('_');
                 const isArchived = archived.includes(roomName);
@@ -300,7 +327,6 @@
                 else friendsEl.appendChild(item);
             });
 
-            // Gruplarım
             const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
             const groups = await groupRes.json();
             groups.forEach(g => {
@@ -339,7 +365,6 @@
             document.getElementById('messages').innerHTML = "";
             document.getElementById('chat-actions').classList.remove('hidden');
             
-            // Mobilde sohbet penceresini aç, sidebar'ı gizle
             document.getElementById('chat-pane').classList.remove('hidden');
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('hidden');
@@ -366,7 +391,6 @@
             closeChatPane();
         }
 
-        // Modallar
         function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
         function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
         function openNotificationsModal() { document.getElementById('notifications-modal').classList.remove('hidden'); refreshData(); }
@@ -434,11 +458,8 @@
             reqList.innerHTML = "";
             notifList.innerHTML = "";
 
-            if (reqs.length > 0 || notifs.length > 0) {
-                badge.classList.remove('hidden');
-            } else {
-                badge.classList.add('hidden');
-            }
+            if (reqs.length > 0 || notifs.length > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
 
             reqs.forEach(req => {
                 reqList.innerHTML += `
@@ -497,12 +518,19 @@
         function sendMessage(e) {
             e.preventDefault();
             const input = document.getElementById('m');
-            if (input.value.trim() && currentRoom) {
-                socket.emit('chat message', {
+            const text = input.value.trim();
+            if (text && currentRoom) {
+                const messageData = {
                     room: currentRoom,
                     sender: currentUser,
-                    text: input.value
-                });
+                    text: text
+                };
+                
+                // Mesajı anında ekrana düşür (Optimistic UI)
+                appendMessage(messageData);
+
+                // Socket ile karşı tarafa gönder
+                socket.emit('chat message', messageData);
                 input.value = '';
             }
         }
