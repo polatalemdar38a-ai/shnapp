@@ -109,6 +109,11 @@
             const password = document.getElementById('reg-password').value;
             const msgEl = document.getElementById('auth-msg');
 
+            if(!username || !password) {
+                msgEl.innerText = "Lütfen tüm alanları doldurun!";
+                return;
+            }
+
             const res = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -130,6 +135,11 @@
             const password = document.getElementById('login-password').value;
             const msgEl = document.getElementById('auth-msg');
 
+            if(!username || !password) {
+                msgEl.innerText = "Lütfen tüm alanları doldurun!";
+                return;
+            }
+
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -143,12 +153,10 @@
                 document.getElementById('chat-container').classList.remove('hidden');
                 document.getElementById('current-username').innerText = `@${currentUser}`;
                 
-                // Socket başlat ve genel odaya gir
                 socket = io();
                 selectRoom('Genel Grup');
 
                 socket.on('chat message', function(data) {
-                    // Sadece aktif odadaki mesajları göster
                     if (data.room === currentRoom) {
                         const item = document.createElement('li');
                         const isMe = data.sender === currentUser;
@@ -209,7 +217,6 @@
                 const listEl = document.getElementById('friends-list');
                 listEl.innerHTML = "";
                 friends.forEach(f => {
-                    // DM oda ismi iki kullanıcının isminin alfabetik sıralanmasıyla oluşur
                     const roomName = [currentUser, f].sort().join('_');
                     const div = document.createElement('div');
                     div.id = `room-${roomName}`;
@@ -223,9 +230,9 @@
 
         function selectRoom(room, displayName = "Genel Grup") {
             currentRoom = room;
-            document.getElementById('active-room-title.innerText = room === 'Genel Grup' ? 'Genel Grup Sohbeti' : `Özel Sohbet: @${displayName}`;
+            document.getElementById('active-room-title').innerText = room === 'Genel Grup' ? 'Genel Grup Sohbeti' : `Özel Sohbet: @${displayName}`;
             document.getElementById('messages').innerHTML = "";
-            socket.emit('join room', room);
+            if(socket) socket.emit('join room', room);
         }
 
         function logout() {
