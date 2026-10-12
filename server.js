@@ -3,14 +3,16 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server);
+const io = new Server(server, {
+    maxHttpBufferSize: 1e7 // 10MB dosya/ses yükleme desteği
+});
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {} }
+const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, lastSeen: 'Çevrimiçi' }
 const groups = []; // { id, name, creator, members: [] }
-const activeSockets = {};
+const activeSockets = {}; // username -> socket.id
 
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
@@ -26,7 +28,8 @@ app.post('/api/register', (req, res) => {
         following: [],
         followers: [],
         archivedRooms: [],
-        nicknames: {}
+        nicknames: {},
+        lastSeen: 'Çevrimiçi'
     });
     res.json({ success: true });
 });
@@ -58,7 +61,7 @@ app.post('/api/send-request', (req, res) => {
     if (target.friends.includes(username)) return res.json({ success: false, message: "Zaten arkadaşsınız!" });
 
     const newReq = { from: username, type: 'friend' };
-    const newNotif = { text: `@${username} sana arkadaşlık isteği gönderdi.`, date: new Date().toLocaleTimeString() };
+    const newNotif = { text: `@${username} sana arkadaşlık isteği gönderdi.`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
     target.requests.push(newReq);
     target.notifications.unshift(newNotif);
 
@@ -81,7 +84,7 @@ app.post('/api/toggle-follow', (req, res) => {
     } else {
         user.following.push(targetUser);
         target.followers.push(username);
-        const newNotif = { text: `@${username} seni takip etmeye başladı.`, date: new Date().toLocaleTimeString() };
+        const newNotif = { text: `@${username} seni takip etmeye başladı.`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
         target.notifications.unshift(newNotif);
         if (activeSockets[targetUser]) {
             io.to(activeSockets[targetUser]).emit('new notification', { notification: newNotif });
@@ -101,7 +104,8 @@ app.get('/api/profile-info', (req, res) => {
         followers: user.followers,
         requests: user.requests,
         notifications: user.notifications,
-        nicknames: user.nicknames || {}
+        nicknames: user.nicknames || {},
+        lastSeen: user.lastSeen
     });
 });
 
@@ -115,8 +119,8 @@ app.post('/api/accept-request', (req, res) => {
         if (!user.friends.includes(requester)) user.friends.push(requester);
         if (!reqUser.friends.includes(username)) reqUser.friends.push(username);
         
-        user.notifications.unshift({ text: `@${requester} ile arkadaşlık isteğin onaylandı.`, date: new Date().toLocaleTimeString() });
-        reqUser.notifications.unshift({ text: `@${username} arkadaşlık isteğini onayladı!`, date: new Date().toLocaleTimeString() });
+        user.notifications.unshift({ text: `@${requester} ile arkadaşlık isteğin onaylandı.`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+        reqUser.notifications.unshift({ text: `@${username} arkadaşlık isteğini onayladı!`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
 
         if (activeSockets[requester]) io.to(activeSockets[requester]).emit('refresh data');
         res.json({ success: true });
@@ -172,19 +176,33 @@ app.get('/api/archived', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+    let currentConnectedUser = "";
+
     socket.on('register user', (username) => {
+        currentConnectedUser = username;
         activeSockets[username] = socket.id;
+        const user = users.find(u => u.username === username);
+        if (user) user.lastSeen = 'Çevrimiçi';
+        io.emit('user status change', { username, status: 'Çevrimiçi' });
     });
 
     socket.on('join room', (room) => {
         socket.join(room);
     });
 
+    socket.on('typing', (data) => {
+        socket.to(data.room).emit('user typing', data);
+    });
+
+    socket.on('stop typing', (data) => {
+        socket.to(data.room).emit('user stop typing', data);
+    });
+
     socket.on('chat message', (data) => {
         io.to(data.room).emit('chat message', data);
     });
 
-    // WebRTC Görüntülü/Sesli Arama Sinyalleri
+    // WebRTC Arama Sinyalleri
     socket.on('call-user', (data) => {
         const targetSocket = activeSockets[data.targetUser];
         if (targetSocket) {
@@ -199,18 +217,14 @@ io.on('connection', (socket) => {
     socket.on('answer-call', (data) => {
         const targetSocket = activeSockets[data.targetUser];
         if (targetSocket) {
-            io.to(targetSocket).emit('call-answered', {
-                answer: data.answer
-            });
+            io.to(targetSocket).emit('call-answered', { answer: data.answer });
         }
     });
 
     socket.on('ice-candidate', (data) => {
         const targetSocket = activeSockets[data.targetUser];
         if (targetSocket) {
-            io.to(targetSocket).emit('ice-candidate', {
-                candidate: data.candidate
-            });
+            io.to(targetSocket).emit('ice-candidate', { candidate: data.candidate });
         }
     });
 
@@ -222,11 +236,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        for (let user in activeSockets) {
-            if (activeSockets[user] === socket.id) {
-                delete activeSockets[user];
-                break;
-            }
+        if (currentConnectedUser) {
+            delete activeSockets[currentConnectedUser];
+            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const user = users.find(u => u.username === currentConnectedUser);
+            if (user) user.lastSeen = `Son görülme: ${timeStr}`;
+            io.emit('user status change', { username: currentConnectedUser, status: `Son görülme: ${timeStr}` });
         }
     });
 });
