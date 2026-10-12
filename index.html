@@ -16,10 +16,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        * {
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0b141a; }
         ::-webkit-scrollbar-thumb { background: #1f2c34; border-radius: 4px; }
@@ -53,7 +50,7 @@
         </div>
     </div>
 
-    <!-- Giriş Yap & Kayıt Ol -->
+    <!-- Giriş & Kayıt -->
     <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3 overflow-hidden">
@@ -111,7 +108,7 @@
         </div>
     </div>
 
-    <!-- Mesajlaşma Ana Ekranı -->
+    <!-- Sohbet Arayüzü -->
     <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92vh] glass-panel md:rounded-3xl luxury-shadow border border-emerald-900/30 hidden flex overflow-hidden">
         
         <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
@@ -172,15 +169,15 @@
                 <div class="flex items-center space-x-1">
                     <button onclick="startCall(false)" class="p-2 rounded-full hover:bg-gray-800 text-emerald-400 transition" title="Sesli Arama"><i data-lucide="phone" class="w-4 h-4"></i></button>
                     <button onclick="startCall(true)" class="p-2 rounded-full hover:bg-gray-800 text-emerald-400 transition" title="Görüntülü Arama"><i data-lucide="video" class="w-4 h-4"></i></button>
-                    <button onclick="toggleInlineSearch()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 transition" title="Sohbet İçi Mesaj Ara"><i data-lucide="search" class="w-4 h-4"></i></button>
+                    <button onclick="toggleInlineSearch()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 transition" title="Mesaj Ara"><i data-lucide="search" class="w-4 h-4"></i></button>
                 </div>
 
                 <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-[#202c33] border border-gray-800 rounded-2xl shadow-2xl py-2 z-50 hidden">
-                    <button onclick="openContactInfoModal()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> Kişi Bilgisi / Hakkımda</button>
-                    <button onclick="pinCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="pin" class="w-4 h-4"></i> Sohbeti Başa Sabitle</button>
-                    <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4"></i> Sohbeti Arşivle</button>
+                    <button onclick="openContactInfoModal()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> Kişi Bilgisi</button>
+                    <button onclick="pinCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="pin" class="w-4 h-4"></i> Başa Sabitle</button>
+                    <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4"></i> Arşivle</button>
                     <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-950 flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Sohbeti Temizle</button>
-                    <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Takma Adı Değiştir</button>
+                    <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Takma Ad Değiştir</button>
                 </div>
             </div>
 
@@ -196,22 +193,22 @@
                     <i data-lucide="reply" class="w-4 h-4 text-emerald-400 shrink-0"></i>
                     <div class="truncate">
                         <span id="reply-to-user" class="font-bold text-emerald-400">Kullanıcı</span>
-                        <p id="reply-to-text" class="text-gray-300 truncate text-[11px]">Mesaj içeriği...</p>
+                        <p id="reply-to-text" class="text-gray-300 truncate text-[11px]">İçerik...</p>
                     </div>
                 </div>
                 <button onclick="cancelReply()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
 
             <form id="chat-form" onsubmit="sendMessage(event)" class="p-2 md:p-3 bg-[#202c33] flex items-center gap-2 shrink-0 z-20 border-t border-gray-800">
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Fotoğraf Gönder">
+                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Fotoğraf">
                     <i data-lucide="camera" class="w-5 h-5"></i>
                     <input type="file" accept="image/*" onchange="sendMediaFile(event, 'image')" class="hidden">
                 </label>
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge Gönder">
+                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge">
                     <i data-lucide="paperclip" class="w-5 h-5"></i>
                     <input type="file" onchange="sendMediaFile(event, 'file')" class="hidden">
                 </label>
-                <button type="button" onclick="sendLocation()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Konum Paylaş">
+                <button type="button" onclick="sendLocation()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Konum">
                     <i data-lucide="map-pin" class="w-5 h-5"></i>
                 </button>
                 <button type="button" id="voice-record-btn" onclick="toggleVoiceRecord()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Ses Kaydı">
@@ -361,14 +358,9 @@
             }
         });
 
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                const viewport = document.getElementById('app-viewport');
-                viewport.style.height = `${window.visualViewport.height}px`;
-                const msgBox = document.getElementById('messages');
-                if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
-            });
-        }
+        // Profesyonel Zil Sese Kaynağı (Cihazın varsayılan zili simülasyonu)
+        const ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
+        ringtone.loop = true;
 
         let currentUser = localStorage.getItem('shnapp_user') || "";
         let currentRoom = "";
@@ -386,8 +378,6 @@
         let myBio = "";
         let myEmail = "";
         let myPhone = "";
-        let showOnlineSetting = true;
-        let showReadReceiptsSetting = true;
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
@@ -405,28 +395,9 @@
             if (deferredPrompt) {
                 document.getElementById('pwa-install-banner').classList.remove('hidden');
             } else {
-                await requestNotificationPermissionStep();
-            }
-        }
-
-        async function installPWA() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                await deferredPrompt.userChoice;
-                deferredPrompt = null;
-            }
-            document.getElementById('pwa-install-banner').classList.add('hidden');
-            await requestNotificationPermissionStep();
-        }
-
-        async function closeInstallBanner() {
-            document.getElementById('pwa-install-banner').classList.add('hidden');
-            await requestNotificationPermissionStep();
-        }
-
-        async function requestNotificationPermissionStep() {
-            if ("Notification" in window && Notification.permission === "default") {
-                try { await Notification.requestPermission(); } catch(e) {}
+                if ("Notification" in window && Notification.permission === "default") {
+                    try { await Notification.requestPermission(); } catch(e) {}
+                }
             }
         }
 
@@ -612,8 +583,14 @@
                 refreshData();
             });
 
+            // Profesyonel Arama ve Zil Sesi Dinleyicisi
             socket.on('incoming-call', async (data) => {
                 incomingCallData = data;
+                try {
+                    ringtone.currentTime = 0;
+                    await ringtone.play();
+                } catch(e) {}
+
                 document.getElementById('call-modal').classList.remove('hidden');
                 document.getElementById('incoming-call-controls').classList.remove('hidden');
                 document.getElementById('end-call-btn').classList.add('hidden');
@@ -622,6 +599,7 @@
             });
 
             socket.on('call-answered', async (data) => {
+                ringtone.pause();
                 document.getElementById('call-status-title').innerText = `@${activeFriendName} ile görüşülüyor`;
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
             });
@@ -635,6 +613,7 @@
             refreshData();
             setTimeout(() => startPermissionsSequence(), 800);
 
+            // Mobilde ilk açılışta doğrudan Arkadaş Listesini göster
             if (window.innerWidth < 768) {
                 document.getElementById('chat-pane').classList.add('hidden');
                 document.getElementById('sidebar').classList.remove('hidden');
@@ -653,8 +632,6 @@
                     myEmail = data.email;
                     myPhone = data.phone;
                     selectedAvatarBase64 = data.avatar;
-                    showOnlineSetting = data.showOnline;
-                    showReadReceiptsSetting = data.showReadReceipts;
 
                     const avatarBox = document.getElementById('my-profile-avatar-container');
                     if(data.avatar) avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
@@ -1063,6 +1040,8 @@
         }
 
         async function acceptCall() {
+            ringtone.pause();
+            ringtone.currentTime = 0;
             document.getElementById('incoming-call-controls').classList.add('hidden');
             document.getElementById('end-call-btn').classList.remove('hidden');
             document.getElementById('call-status-title').innerText = `@${incomingCallData.from} ile görüşülüyor`;
@@ -1082,17 +1061,23 @@
         }
 
         function rejectCall() {
+            ringtone.pause();
+            ringtone.currentTime = 0;
             if (incomingCallData) socket.emit('end-call', { targetUser: incomingCallData.from });
             closeCallModal();
         }
 
         function endCall() {
+            ringtone.pause();
+            ringtone.currentTime = 0;
             const target = activeFriendName || (incomingCallData ? incomingCallData.from : null);
             if (target) socket.emit('end-call', { targetUser: target });
             closeCallModal();
         }
 
         function closeCallModal() {
+            ringtone.pause();
+            ringtone.currentTime = 0;
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (peerConnection) { peerConnection.close(); peerConnection = null; }
             document.getElementById('call-modal').classList.add('hidden');
@@ -1185,7 +1170,7 @@
         }
 
         async function createGroup() {
-            const groupName = document.getElementById('group-name-input-value') || document.getElementById('group-name-input').value;
+            const groupName = document.getElementById('group-name-input').value;
             const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
             const members = Array.from(checkboxes).map(cb => cb.value);
 
