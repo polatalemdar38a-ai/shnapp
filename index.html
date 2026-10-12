@@ -8,7 +8,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0b141a">
     
-    <!-- Özel Logo ve PWA İkon Tanımlamaları -->
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b141a%22%2C%22theme_color%22%3A%22%2325d366%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D'>
@@ -56,7 +55,7 @@
         <div class="flex items-center space-x-3">
             <i data-lucide="smartphone" class="w-6 h-6"></i>
             <div>
-                <h4 class="font-bold text-xs">1. Adım: SHNAPP'i Ana Ekrana Ekle</h4>
+                <h4 class="font-bold text-xs">SHNAPP'i Ana Ekrana Ekle</h4>
                 <p class="text-[10px] text-emerald-100">Uygulama gibi tek dokunuşla başlat!</p>
             </div>
         </div>
@@ -66,6 +65,7 @@
         </div>
     </div>
 
+    <!-- Giriş ve Kayıt Ekranı -->
     <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3 overflow-hidden">
@@ -83,14 +83,21 @@
         <div id="login-form" class="space-y-4">
             <input type="text" id="login-username" placeholder="Kullanıcı adı" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <input type="password" id="login-password" placeholder="Şifre" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
+            
+            <div class="text-right">
+                <button onclick="openForgotPasswordModal()" class="text-[11px] text-emerald-400 hover:underline">Şifremi Unuttum?</button>
+            </div>
+
             <button onclick="login()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider flex justify-center items-center gap-2">
                 <span>Giriş Yap</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
         </div>
 
-        <div id="register-form" class="space-y-4 hidden">
+        <div id="register-form" class="space-y-3 hidden">
             <input type="text" id="reg-username" placeholder="Kullanıcı adı seç" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
+            <input type="email" id="reg-email" placeholder="E-posta adresi (Şifre sıfırlama için)" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
+            <input type="tel" id="reg-phone" placeholder="Telefon No (Örn: 0555...)" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <button onclick="register()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider">Kayıt Ol</button>
         </div>
@@ -98,16 +105,40 @@
         <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
     </div>
 
+    <!-- Şifremi Unuttum Modali -->
+    <div id="forgot-password-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
+        <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-white text-sm">Şifre Sıfırlama</h3>
+                <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div id="forgot-step-1" class="space-y-3">
+                <p class="text-xs text-gray-300">Hesabınıza ait Kullanıcı Adı, E-posta veya Telefon numaranızı girin:</p>
+                <input type="text" id="forgot-identity-input" placeholder="E-posta, Telefon veya Kullanıcı Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                <button onclick="requestResetCode()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Kod Gönder</button>
+            </div>
+
+            <div id="forgot-step-2" class="space-y-3 hidden">
+                <p class="text-xs text-emerald-400" id="forgot-code-info">Doğrulama kodunuz oluşturuldu.</p>
+                <input type="text" id="forgot-code-input" placeholder="6 Haneli Doğrulama Kodu" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                <input type="password" id="forgot-new-password" placeholder="Yeni Şifre" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                <button onclick="submitResetPassword()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Şifreyi Değiştir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sohbet Arayüzü -->
     <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92vh] glass-panel md:rounded-3xl luxury-shadow border border-emerald-900/30 hidden flex overflow-hidden">
         
         <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#202c33]/50">
                 <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfileSettingsModal()" title="Profil & Ayarları Düzenle">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20 overflow-hidden" id="profile-initial">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20 overflow-hidden shrink-0 border border-emerald-500/30" id="my-profile-avatar-container">
                         <span id="profile-initial-text">S</span>
                     </div>
-                    <div>
-                        <span id="current-username" class="font-bold text-xs text-white block">Kullanıcı</span>
+                    <div class="min-w-0">
+                        <span id="current-username" class="font-bold text-xs text-white block truncate">Kullanıcı</span>
                         <span class="text-[9px] text-emerald-400 font-semibold tracking-wider flex items-center gap-1">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Çevrimiçi
                         </span>
@@ -126,7 +157,9 @@
 
             <div class="flex-1 overflow-y-auto p-2 space-y-4">
                 <div>
-                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2 mt-1">Sohbetler</div>
+                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2 mt-1">Sabitlenenler</div>
+                    <div id="pinned-list" class="space-y-1 mb-3"></div>
+                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2">Sohbetler</div>
                     <div id="friends-list" class="space-y-1"></div>
                 </div>
 
@@ -147,7 +180,9 @@
             <div class="px-4 md:px-6 py-3 border-b border-gray-800/80 bg-[#202c33] flex items-center justify-between shrink-0 z-10">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-emerald-400 font-bold p-1"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
-                    <div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-sm" id="chat-header-icon"><i data-lucide="user" class="w-5 h-5"></i></div>
+                    <div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-sm overflow-hidden" id="chat-header-icon">
+                        <i data-lucide="user" class="w-5 h-5"></i>
+                    </div>
                     <div>
                         <h3 id="active-room-title" onclick="toggleHeaderMenu()" class="font-bold text-sm text-white flex items-center gap-1.5 cursor-pointer hover:text-emerald-400 transition">Sohbet Seçin</h3>
                         <span class="text-[11px] text-emerald-400 block -mt-0.5" id="active-room-sub">Sol menüden bir kişi seçin</span>
@@ -162,6 +197,7 @@
 
                 <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-[#202c33] border border-gray-800 rounded-2xl shadow-2xl py-2 z-50 hidden">
                     <button onclick="openContactInfoModal()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> Kişi Bilgisi / Hakkımda</button>
+                    <button onclick="pinCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="pin" class="w-4 h-4"></i> Sohbeti Başa Sabitle</button>
                     <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4"></i> Sohbeti Arşivle</button>
                     <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-950 flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Sohbeti Temizle</button>
                     <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Takma Adı Değiştir</button>
@@ -179,11 +215,32 @@
 
             <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 text-sm"></ul>
 
+            <!-- Yanıtlanan Mesaj Önizleme Alanı -->
+            <div id="reply-preview-box" class="hidden px-4 py-2 bg-[#1f2c34] border-t border-gray-800 flex justify-between items-center text-xs shrink-0">
+                <div class="flex items-center space-x-2 truncate">
+                    <i data-lucide="reply" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                    <div class="truncate">
+                        <span id="reply-to-user" class="font-bold text-emerald-400">Kullanıcı</span>
+                        <p id="reply-to-text" class="text-gray-300 truncate text-[11px]">Mesaj içeriği...</p>
+                    </div>
+                </div>
+                <button onclick="cancelReply()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
             <form id="chat-form" onsubmit="sendMessage(event)" class="p-2 md:p-3 bg-[#202c33] flex items-center gap-2 shrink-0 z-20 border-t border-gray-800">
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Resim Gönder">
+                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Fotoğraf Gönder">
                     <i data-lucide="camera" class="w-5 h-5"></i>
-                    <input type="file" accept="image/*" onchange="sendImage(event)" class="hidden">
+                    <input type="file" accept="image/*" onchange="sendMediaFile(event, 'image')" class="hidden">
                 </label>
+
+                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge / Dosya Gönder (PDF, Word vb.)">
+                    <i data-lucide="paperclip" class="w-5 h-5"></i>
+                    <input type="file" onchange="sendMediaFile(event, 'file')" class="hidden">
+                </label>
+
+                <button type="button" onclick="sendLocation()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Anlık Konum Paylaş">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </button>
 
                 <button type="button" id="voice-record-btn" onclick="toggleVoiceRecord()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Ses Kaydı Gönder">
                     <i data-lucide="mic" class="w-5 h-5" id="mic-icon"></i>
@@ -228,16 +285,45 @@
         </div>
     </div>
 
+    <!-- Gelişmiş Profil & Ayarlar Modali -->
     <div id="profile-settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
+        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-white text-sm">Profil ve Gizlilik Ayarları</h3>
+                <h3 class="font-bold text-white text-sm">Profil ve Hesap Ayarları</h3>
                 <button onclick="closeProfileSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
+
+            <!-- Profil Fotoğrafı Değiştirme -->
+            <div class="text-center space-y-2">
+                <div class="relative w-24 h-24 mx-auto rounded-full bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center overflow-hidden shadow-xl" id="modal-avatar-preview">
+                    <span id="modal-avatar-initial" class="text-2xl font-bold text-emerald-400">S</span>
+                </div>
+                <label class="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer transition">
+                    <span>Profil Fotoğrafı Seç</span>
+                    <input type="file" accept="image/*" onchange="previewAvatar(event)" class="hidden">
+                </label>
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Kullanıcı Adı (Nick)</label>
+                <input type="text" id="settings-username-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
             <div>
                 <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Hakkımda / Durum</label>
                 <input type="text" id="settings-bio-input" placeholder="Hakkımda yazısı..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
             </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">E-Posta Adresi</label>
+                <input type="email" id="settings-email-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Telefon Numarası</label>
+                <input type="tel" id="settings-phone-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
             <div class="space-y-2 pt-2 border-t border-gray-800">
                 <label class="flex items-center space-x-3 text-xs cursor-pointer">
                     <input type="checkbox" id="settings-show-online" class="rounded bg-gray-900 border-gray-700 text-emerald-600">
@@ -248,6 +334,7 @@
                     <span>Okundu Bilgisini Göster (Mavi Tik)</span>
                 </label>
             </div>
+
             <button onclick="saveProfileSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30">Değişiklikleri Kaydet</button>
         </div>
     </div>
@@ -258,7 +345,9 @@
                 <h3 class="font-bold text-white text-sm">Kişi Bilgisi</h3>
                 <button onclick="closeContactInfoModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div class="w-20 h-20 bg-emerald-600/20 border border-emerald-500/40 rounded-full mx-auto flex items-center justify-center text-emerald-400 font-bold text-2xl" id="contact-modal-initial">?</div>
+            <div class="w-20 h-20 bg-emerald-600/20 border border-emerald-500/40 rounded-full mx-auto flex items-center justify-center text-emerald-400 font-bold text-2xl overflow-hidden" id="contact-modal-avatar-box">
+                <span id="contact-modal-initial">?</span>
+            </div>
             <div>
                 <h4 id="contact-modal-username" class="font-bold text-base text-white">Kullanıcı</h4>
                 <p id="contact-modal-status" class="text-xs text-emerald-400 mt-0.5">Çevrim içi</p>
@@ -337,12 +426,18 @@
         let friends = [];
         let following = [];
         let archived = [];
+        let pinned = [];
         let nicknames = {};
         let unreadRooms = JSON.parse(localStorage.getItem('shnapp_unread') || "{}");
         let deferredPrompt = null;
         let typingTimeout = null;
 
+        let replyingTo = null;
+        let selectedAvatarBase64 = ""; // Seçilen profil resmi
+
         let myBio = "";
+        let myEmail = "";
+        let myPhone = "";
         let showOnlineSetting = true;
         let showReadReceiptsSetting = true;
 
@@ -360,7 +455,6 @@
             deferredPrompt = e;
         });
 
-        // Sıralı İzin Akışı
         async function startPermissionsSequence() {
             if (deferredPrompt) {
                 document.getElementById('pwa-install-banner').classList.remove('hidden');
@@ -431,12 +525,14 @@
         async function register() {
             const username = document.getElementById('reg-username').value;
             const password = document.getElementById('reg-password').value;
+            const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
             const msgEl = document.getElementById('auth-msg');
 
             const res = await fetch('/api/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password, email, phone })
             });
             const data = await res.json();
             if (data.success) {
@@ -469,11 +565,59 @@
             }
         }
 
+        // ŞİFREMİ UNUTTUM İŞLEMLERİ
+        function openForgotPasswordModal() {
+            document.getElementById('forgot-password-modal').classList.remove('hidden');
+            document.getElementById('forgot-step-1').classList.remove('hidden');
+            document.getElementById('forgot-step-2').classList.add('hidden');
+        }
+        function closeForgotPasswordModal() {
+            document.getElementById('forgot-password-modal').classList.add('hidden');
+        }
+
+        async function requestResetCode() {
+            const identity = document.getElementById('forgot-identity-input').value.trim();
+            if(!identity) return alert("Lütfen bilginizi girin!");
+
+            const res = await fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identity })
+            });
+            const data = await res.json();
+            if(data.success) {
+                document.getElementById('forgot-step-1').classList.add('hidden');
+                document.getElementById('forgot-step-2').classList.remove('hidden');
+                document.getElementById('forgot-code-info').innerText = data.message;
+                window.resetTargetUser = data.username;
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function submitResetPassword() {
+            const code = document.getElementById('forgot-code-input').value.trim();
+            const newPassword = document.getElementById('forgot-new-password').value.trim();
+            if(!code || !newPassword) return alert("Tüm alanları doldurun!");
+
+            const res = await fetch('/api/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: window.resetTargetUser, code, newPassword })
+            });
+            const data = await res.json();
+            if(data.success) {
+                alert(data.message);
+                closeForgotPasswordModal();
+            } else {
+                alert(data.message);
+            }
+        }
+
         function initApp(username) {
             document.getElementById('auth-container').classList.add('hidden');
             document.getElementById('chat-container').classList.remove('hidden');
             document.getElementById('current-username').innerText = username;
-            document.getElementById('profile-initial').innerHTML = `<img src="logo.png" class="w-full h-full object-cover">`;
             
             socket = io();
             socket.emit('register user', username);
@@ -494,6 +638,11 @@
                     localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
                     renderMainLists();
                 }
+            });
+
+            socket.on('message deleted', function(data) {
+                const el = document.getElementById(data.msgId);
+                if (el) el.remove();
             });
 
             socket.on('load history', function(history) {
@@ -571,10 +720,22 @@
                 if (data.success) {
                     friends = data.friends;
                     following = data.following;
+                    pinned = data.pinnedRooms || [];
                     nicknames = data.nicknames || {};
                     myBio = data.bio;
+                    myEmail = data.email;
+                    myPhone = data.phone;
+                    selectedAvatarBase64 = data.avatar;
                     showOnlineSetting = data.showOnline;
                     showReadReceiptsSetting = data.showReadReceipts;
+
+                    // Profil Avatarını Sol Üstte Güncelle
+                    const avatarBox = document.getElementById('my-profile-avatar-container');
+                    if(data.avatar) {
+                        avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
+                    } else {
+                        avatarBox.innerHTML = `<span class="text-sm font-bold">${currentUser.charAt(0).toUpperCase()}</span>`;
+                    }
 
                     const archRes = await fetch(`/api/archived?user=${currentUser}`);
                     archived = await archRes.json();
@@ -585,33 +746,75 @@
             } catch(e) {}
         }
 
+        // PROFİL AYARLARI MODALİ İŞLEMLERİ
         function openProfileSettingsModal() {
             document.getElementById('profile-settings-modal').classList.remove('hidden');
+            document.getElementById('settings-username-input').value = currentUser;
             document.getElementById('settings-bio-input').value = myBio;
+            document.getElementById('settings-email-input').value = myEmail;
+            document.getElementById('settings-phone-input').value = myPhone;
             document.getElementById('settings-show-online').checked = showOnlineSetting;
             document.getElementById('settings-show-read').checked = showReadReceiptsSetting;
+
+            const preview = document.getElementById('modal-avatar-preview');
+            if(selectedAvatarBase64) {
+                preview.innerHTML = `<img src="${selectedAvatarBase64}" class="w-full h-full object-cover">`;
+            } else {
+                preview.innerHTML = `<span class="text-2xl font-bold text-emerald-400">${currentUser.charAt(0).toUpperCase()}</span>`;
+            }
         }
         function closeProfileSettingsModal() {
             document.getElementById('profile-settings-modal').classList.add('hidden');
         }
 
+        function previewAvatar(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    selectedAvatarBase64 = evt.target.result;
+                    document.getElementById('modal-avatar-preview').innerHTML = `<img src="${selectedAvatarBase64}" class="w-full h-full object-cover">`;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
         async function saveProfileSettings() {
+            const newUsername = document.getElementById('settings-username-input').value.trim();
             const bio = document.getElementById('settings-bio-input').value.trim();
+            const email = document.getElementById('settings-email-input').value.trim();
+            const phone = document.getElementById('settings-phone-input').value.trim();
             const showOnline = document.getElementById('settings-show-online').checked;
             const showReadReceipts = document.getElementById('settings-show-read').checked;
 
             const res = await fetch('/api/update-profile-settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, bio, showOnline, showReadReceipts })
+                body: JSON.stringify({ 
+                    username: currentUser, 
+                    newUsername,
+                    bio, 
+                    avatar: selectedAvatarBase64,
+                    email,
+                    phone,
+                    showOnline, 
+                    showReadReceipts 
+                })
             });
             const data = await res.json();
             if (data.success) {
+                currentUser = data.username;
+                localStorage.setItem('shnapp_user', currentUser);
+                document.getElementById('current-username').innerText = currentUser;
+                
                 myBio = data.bio;
                 showOnlineSetting = data.showOnline;
                 showReadReceiptsSetting = data.showReadReceipts;
                 closeProfileSettingsModal();
-                alert("Ayarlarınız güncellendi!");
+                refreshData();
+                alert("Profil ayarlarınız güncellendi!");
+            } else {
+                alert(data.message || "Güncelleme başarısız!");
             }
         }
 
@@ -622,7 +825,12 @@
             const res = await fetch(`/api/profile-info?user=${activeFriendName}`);
             const data = await res.json();
             if (data.success) {
-                document.getElementById('contact-modal-initial').innerText = activeFriendName.charAt(0).toUpperCase();
+                const avatarBox = document.getElementById('contact-modal-avatar-box');
+                if(data.avatar) {
+                    avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
+                } else {
+                    avatarBox.innerHTML = `<span class="text-xl font-bold text-emerald-400">${activeFriendName.charAt(0).toUpperCase()}</span>`;
+                }
                 document.getElementById('contact-modal-username').innerText = `@${activeFriendName}`;
                 document.getElementById('contact-modal-status').innerText = data.lastSeen || 'Çevrim dışı';
                 document.getElementById('contact-modal-bio').innerText = data.bio;
@@ -635,17 +843,21 @@
 
         async function renderMainLists() {
             const friendsEl = document.getElementById('friends-list');
+            const pinnedEl = document.getElementById('pinned-list');
             const groupsEl = document.getElementById('groups-list');
             const archEl = document.getElementById('archived-list');
-            friendsEl.innerHTML = ""; groupsEl.innerHTML = ""; archEl.innerHTML = "";
+            friendsEl.innerHTML = ""; pinnedEl.innerHTML = ""; groupsEl.innerHTML = ""; archEl.innerHTML = "";
 
             friends.forEach(f => {
                 const roomName = [currentUser, f].sort().join('_');
+                const isPinned = pinned.includes(roomName);
                 const isArchived = archived.includes(roomName);
                 const hasUnread = unreadRooms[roomName];
                 const displayName = nicknames[f] || f;
                 const item = createListItem(displayName, 'Kişisel Mesaj', roomName, 'user', hasUnread, f);
-                if (isArchived) archEl.appendChild(item);
+                
+                if (isPinned && !isArchived) pinnedEl.appendChild(item);
+                else if (isArchived) archEl.appendChild(item);
                 else friendsEl.appendChild(item);
             });
 
@@ -653,10 +865,13 @@
                 const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
                 const groups = await groupRes.json();
                 groups.forEach(g => {
+                    const isPinned = pinned.includes(g.id);
                     const isArchived = archived.includes(g.id);
                     const hasUnread = unreadRooms[g.id];
                     const item = createListItem(g.name, 'Grup Sohbeti', g.id, 'users', hasUnread, null);
-                    if (isArchived) archEl.appendChild(item);
+                    
+                    if (isPinned && !isArchived) pinnedEl.appendChild(item);
+                    else if (isArchived) archEl.appendChild(item);
                     else groupsEl.appendChild(item);
                 });
             } catch(e) {}
@@ -728,7 +943,7 @@
         }
 
         function toggleHeaderMenu() {
-            if (!activeFriendName) return;
+            if (!activeFriendName && !currentRoom) return;
             document.getElementById('header-dropdown').classList.toggle('hidden');
         }
 
@@ -747,6 +962,16 @@
             items.forEach(item => {
                 item.style.display = item.innerText.toLowerCase().includes(query) ? "flex" : "none";
             });
+        }
+
+        async function pinCurrentRoom() {
+            if (!currentRoom) return;
+            await fetch('/api/pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, roomId: currentRoom })
+            });
+            toggleHeaderMenu(); refreshData();
         }
 
         async function archiveCurrentRoom() {
@@ -802,6 +1027,40 @@
             toggleHeaderMenu();
         }
 
+        function sendMediaFile(event, type) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    sendCustomMessage({
+                        type: type,
+                        url: e.target.result,
+                        fileName: file.name
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function sendLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const mapUrl = `https://maps.google.com/?q=${lat},${lon}`;
+                    sendCustomMessage({
+                        type: 'location',
+                        url: mapUrl,
+                        text: '📍 Konum Paylaşıldı'
+                    });
+                }, () => {
+                    alert("Konum alınamadı!");
+                });
+            } else {
+                alert("Tarayıcınız konum özelliğini desteklemiyor.");
+            }
+        }
+
         async function toggleVoiceRecord() {
             const micBtn = document.getElementById('voice-record-btn');
             if (!isRecording) {
@@ -831,17 +1090,6 @@
             }
         }
 
-        function sendImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    sendCustomMessage({ type: 'image', url: e.target.result });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
         function sendMessage(e) {
             e.preventDefault();
             const input = document.getElementById('m');
@@ -849,6 +1097,7 @@
             if (text && currentRoom) {
                 sendCustomMessage({ type: 'text', content: text });
                 input.value = '';
+                cancelReply();
                 socket.emit('stop typing', { room: currentRoom, username: currentUser });
             }
         }
@@ -859,24 +1108,76 @@
                     room: currentRoom,
                     sender: currentUser,
                     payload: msgPayload,
+                    replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
                     time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                 };
                 socket.emit('chat message', messageData);
+                cancelReply();
+            }
+        }
+
+        function setReplyTo(id, sender, text) {
+            replyingTo = { id, sender, text };
+            document.getElementById('reply-preview-box').classList.remove('hidden');
+            document.getElementById('reply-to-user').innerText = `@${sender}`;
+            document.getElementById('reply-to-text').innerText = text;
+        }
+
+        function cancelReply() {
+            replyingTo = null;
+            document.getElementById('reply-preview-box').classList.add('hidden');
+        }
+
+        function deleteMessage(msgId) {
+            if (confirm("Bu mesajı herkesten silmek istiyor musunuz?")) {
+                socket.emit('delete message', { room: currentRoom, msgId });
             }
         }
 
         function appendMessage(data) {
             const item = document.createElement('li');
             const isMe = data.sender === currentUser;
-            item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+            item.id = data.id;
+            item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} group`;
 
             let bodyHtml = "";
+            let rawTextForReply = "";
+
             if (data.payload.type === 'text') {
                 bodyHtml = `<p class="break-words">${data.payload.content}</p>`;
+                rawTextForReply = data.payload.content;
             } else if (data.payload.type === 'image') {
                 bodyHtml = `<img src="${data.payload.url}" class="rounded-xl max-w-xs max-h-60 object-cover my-1" />`;
+                rawTextForReply = "[Fotoğraf]";
+            } else if (data.payload.type === 'file') {
+                bodyHtml = `
+                    <a href="${data.payload.url}" download="${data.payload.fileName}" class="flex items-center gap-2 bg-black/20 p-2.5 rounded-xl hover:bg-black/30 transition text-white">
+                        <i data-lucide="file-text" class="w-6 h-6"></i>
+                        <span class="underline truncate max-w-[180px] text-xs">${data.payload.fileName || 'Dosya'}</span>
+                    </a>
+                `;
+                rawTextForReply = `[Dosya: ${data.payload.fileName}]`;
+            } else if (data.payload.type === 'location') {
+                bodyHtml = `
+                    <a href="${data.payload.url}" target="_blank" class="flex items-center gap-2 bg-emerald-950/60 p-2.5 rounded-xl hover:bg-emerald-950 transition text-emerald-300 border border-emerald-800/50">
+                        <i data-lucide="map-pin" class="w-6 h-6 shrink-0"></i>
+                        <span class="text-xs font-bold underline">Canlı Konum Haritasını Aç</span>
+                    </a>
+                `;
+                rawTextForReply = "[Konum]";
             } else if (data.payload.type === 'audio') {
                 bodyHtml = `<audio controls src="${data.payload.url}" class="w-60 h-10 my-1"></audio>`;
+                rawTextForReply = "[Ses Kaydı]";
+            }
+
+            let replyHtml = "";
+            if (data.replyTo) {
+                replyHtml = `
+                    <div class="bg-black/20 border-l-2 border-emerald-400 pl-2 py-1 mb-1 rounded text-[10px] text-gray-300">
+                        <span class="font-bold text-emerald-400">@${data.replyTo.sender}</span>
+                        <p class="truncate">${data.replyTo.text}</p>
+                    </div>
+                `;
             }
 
             const showTicks = isMe ? data.showReadReceipts : true;
@@ -884,10 +1185,16 @@
             item.innerHTML = `
                 <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs relative ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-gray-100 rounded-tl-none'} shadow-md">
                     ${!isMe ? `<span class="block text-[10px] text-emerald-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
+                    ${replyHtml}
                     ${bodyHtml}
                     <div class="flex items-center justify-end gap-1 mt-1 text-[9px] text-gray-300">
                         <span>${data.time || ''}</span>
                         ${isMe && showTicks ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-sky-400 inline"></i>' : (isMe ? '<i data-lucide="check" class="w-3.5 h-3.5 text-gray-400 inline"></i>' : '')}
+                    </div>
+                    
+                    <div class="absolute -top-3 ${isMe ? '-left-16' : '-right-16'} hidden group-hover:flex items-center gap-1 bg-[#111b21] p-1 rounded-lg border border-gray-800 shadow-xl z-10">
+                        <button onclick="setReplyTo('${data.id}', '${data.sender}', '${rawTextForReply.replace(/'/g, "\\'")}')" class="p-1 hover:bg-gray-800 rounded text-emerald-400" title="Yanıtla"><i data-lucide="reply" class="w-3.5 h-3.5"></i></button>
+                        ${isMe ? `<button onclick="deleteMessage('${data.id}')" class="p-1 hover:bg-red-950 rounded text-red-400" title="Herkesten Sil"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
                     </div>
                 </div>
             `;

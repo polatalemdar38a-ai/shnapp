@@ -4,25 +4,30 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
-    maxHttpBufferSize: 1e7
+    maxHttpBufferSize: 5e7 // Büyük dosyalar ve profil resimleri için
 });
 
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.static(__dirname));
 
 const users = [];
 const groups = [];
 const activeSockets = {};
 const messages = {};
+const resetTokens = {}; // Şifre sıfırlama kodları
 
+// KAYIT OL
 app.post('/api/register', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.json({ success: false, message: "Alanlar boş olamaz!" });
-    if (users.find(u => u.username === username)) return res.json({ success: false, message: "Bu kullanıcı adı alınmış!" });
-    
+    const { username, password, email, phone } = req.body;
+    if (!username || !password) return res.json({ success: false, message: "Kullanıcı adı ve şifre zorunludur!" });
+    if (users.find(u => u.username === username)) return res.json({ success: false, message: "Bu kullanıcı adı zaten alınmış!" });
+
     users.push({
         username,
         password,
+        email: email || "",
+        phone: phone || "",
+        avatar: "", // Profil fotoğrafı (Base64)
         bio: "Hey there! I am using SHNAPP.",
         showOnline: true,
         showReadReceipts: true,
@@ -32,12 +37,14 @@ app.post('/api/register', (req, res) => {
         following: [],
         followers: [],
         archivedRooms: [],
+        pinnedRooms: [],
         nicknames: {},
         lastSeen: 'Çevrimiçi'
     });
     res.json({ success: true });
 });
 
+// GİRİŞ YAP
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -48,15 +55,39 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-app.get('/api/search', (req, res) => {
-    const query = req.query.q || '';
-    const currentUser = req.query.user || '';
-    const results = users
-        .filter(u => u.username.toLowerCase().includes(query.toLowerCase()) && u.username !== currentUser)
-        .map(u => ({ username: u.username, bio: u.bio }));
-    res.json(results);
+// ŞİFREMİ UNUTTUM (KOD İSTEĞİ)
+app.post('/api/forgot-password', (req, res) => {
+    const { identity } = req.body; // E-posta veya Telefon
+    const user = users.find(u => u.email === identity || u.phone === identity || u.username === identity);
+    
+    if (!user) {
+        return res.json({ success: false, message: "Bu bilgilerle eşleşen kullanıcı bulunamadı!" });
+    }
+
+    // 6 Haneli Doğrulama Kodu Üret
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    resetTokens[user.username] = code;
+
+    // Gerçek sistemde SMS/E-posta servisine gönderilir. Şimdilik konsola yazdırıp kullanıcıya bildiriyoruz.
+    console.log(`[ŞİFRE SIFIRLAMA KODU] User: ${user.username} | Kod: ${code}`);
+    res.json({ success: true, message: `Doğrulama kodunuz oluşturuldu! (Test Kodu: ${code})`, username: user.username });
 });
 
+// ŞİFRE SIFIRLAMA (YENİ ŞİFRE BELİRLEME)
+app.post('/api/reset-password', (req, res) => {
+    const { username, code, newPassword } = req.body;
+    if (resetTokens[username] && resetTokens[username] === code) {
+        const user = users.find(u => u.username === username);
+        if (user) {
+            user.password = newPassword;
+            delete resetTokens[username];
+            return res.json({ success: true, message: "Şifreniz başarıyla güncellendi! Giriş yapabilirsiniz." });
+        }
+    }
+    res.json({ success: false, message: "Geçersiz veya hatalı doğrulama kodu!" });
+});
+
+// PROFİL BİLGİLERİNİ ÇEKME
 app.get('/api/profile-info', (req, res) => {
     const username = req.query.user;
     const user = users.find(u => u.username === username);
@@ -65,6 +96,9 @@ app.get('/api/profile-info', (req, res) => {
         success: true,
         username: user.username,
         bio: user.bio || "Hey there! I am using SHNAPP.",
+        avatar: user.avatar || "",
+        email: user.email || "",
+        phone: user.phone || "",
         showOnline: user.showOnline !== undefined ? user.showOnline : true,
         showReadReceipts: user.showReadReceipts !== undefined ? user.showReadReceipts : true,
         friends: user.friends,
@@ -72,27 +106,56 @@ app.get('/api/profile-info', (req, res) => {
         followers: user.followers,
         requests: user.requests,
         notifications: user.notifications,
+        pinnedRooms: user.pinnedRooms || [],
         nicknames: user.nicknames || {},
         lastSeen: user.showOnline ? user.lastSeen : ""
     });
 });
 
+// PROFİL AYARLARINI GÜNCELLEME (Fotoğraf, Bio, Nick, E-posta, Telefon, Şifre)
 app.post('/api/update-profile-settings', (req, res) => {
-    const { username, bio, showOnline, showReadReceipts } = req.body;
+    const { username, newUsername, bio, avatar, email, phone, showOnline, showReadReceipts } = req.body;
     const user = users.find(u => u.username === username);
-    if (user) {
-        if (bio !== undefined) user.bio = bio;
-        if (showOnline !== undefined) user.showOnline = showOnline;
-        if (showReadReceipts !== undefined) user.showReadReceipts = showReadReceipts;
-        
-        io.emit('user status change', { 
-            username, 
-            status: user.showOnline ? user.lastSeen : "" 
-        });
-        res.json({ success: true, bio: user.bio, showOnline: user.showOnline, showReadReceipts: user.showReadReceipts });
-    } else {
-        res.json({ success: false });
+    
+    if (!user) return res.json({ success: false, message: "Kullanıcı bulunamadı!" });
+
+    // Eğer kullanıcı adı değiştirilmek isteniyorsa çakışma kontrolü
+    if (newUsername && newUsername !== username) {
+        if (users.find(u => u.username === newUsername)) {
+            return res.json({ success: false, message: "Bu kullanıcı adı zaten başka biri tarafından kullanılıyor!" });
+        }
+        user.username = newUsername;
     }
+
+    if (bio !== undefined) user.bio = bio;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (showOnline !== undefined) user.showOnline = showOnline;
+    if (showReadReceipts !== undefined) user.showReadReceipts = showReadReceipts;
+
+    io.emit('user status change', { 
+        username: user.username, 
+        status: user.showOnline ? user.lastSeen : "" 
+    });
+
+    res.json({ 
+        success: true, 
+        username: user.username,
+        bio: user.bio, 
+        avatar: user.avatar,
+        showOnline: user.showOnline, 
+        showReadReceipts: user.showReadReceipts 
+    });
+});
+
+app.get('/api/search', (req, res) => {
+    const query = req.query.q || '';
+    const currentUser = req.query.user || '';
+    const results = users
+        .filter(u => u.username.toLowerCase().includes(query.toLowerCase()) && u.username !== currentUser)
+        .map(u => ({ username: u.username, bio: u.bio, avatar: u.avatar }));
+    res.json(results);
 });
 
 app.post('/api/send-request', (req, res) => {
@@ -201,6 +264,20 @@ app.get('/api/archived', (req, res) => {
     res.json(user ? user.archivedRooms : []);
 });
 
+app.post('/api/pin', (req, res) => {
+    const { username, roomId } = req.body;
+    const user = users.find(u => u.username === username);
+    if (user) {
+        if (!user.pinnedRooms) user.pinnedRooms = [];
+        if (user.pinnedRooms.includes(roomId)) {
+            user.pinnedRooms = user.pinnedRooms.filter(id => id !== roomId);
+        } else {
+            user.pinnedRooms.push(roomId);
+        }
+    }
+    res.json({ success: true });
+});
+
 io.on('connection', (socket) => {
     let currentConnectedUser = "";
 
@@ -236,6 +313,7 @@ io.on('connection', (socket) => {
     socket.on('chat message', (data) => {
         const senderUser = users.find(u => u.username === data.sender);
         data.showReadReceipts = senderUser ? senderUser.showReadReceipts : true;
+        data.id = 'msg_' + Date.now() + Math.random();
         
         if (!messages[data.room]) {
             messages[data.room] = [];
@@ -244,6 +322,13 @@ io.on('connection', (socket) => {
 
         io.to(data.room).emit('chat message', data);
         socket.to(data.room).emit('trigger unread', { room: data.room });
+    });
+
+    socket.on('delete message', (data) => {
+        if (messages[data.room]) {
+            messages[data.room] = messages[data.room].filter(m => m.id !== data.msgId);
+            io.to(data.room).emit('message deleted', { msgId: data.msgId });
+        }
     });
 
     socket.on('clear-chat', (room) => {
