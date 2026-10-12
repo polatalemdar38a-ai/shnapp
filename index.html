@@ -451,7 +451,8 @@
                 } else {
                     unreadRooms[data.room] = true;
                     localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
-                    refreshData();
+                    // Sadece sol listeyi gecikmesiz hızlıca güncelle (tam yenileme yok)
+                    renderMainLists();
                 }
             });
 
@@ -598,15 +599,17 @@
                 else friendsEl.appendChild(item);
             });
 
-            const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
-            const groups = await groupRes.json();
-            groups.forEach(g => {
-                const isArchived = archived.includes(g.id);
-                const hasUnread = unreadRooms[g.id];
-                const item = createListItem(g.name, 'Grup Sohbeti', g.id, 'users', hasUnread, null);
-                if (isArchived) archEl.appendChild(item);
-                else groupsEl.appendChild(item);
-            });
+            try {
+                const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
+                const groups = await groupRes.json();
+                groups.forEach(g => {
+                    const isArchived = archived.includes(g.id);
+                    const hasUnread = unreadRooms[g.id];
+                    const item = createListItem(g.name, 'Grup Sohbeti', g.id, 'users', hasUnread, null);
+                    if (isArchived) archEl.appendChild(item);
+                    else groupsEl.appendChild(item);
+                });
+            } catch(e) {}
             
             lucide.createIcons();
         }
@@ -653,7 +656,7 @@
             }
 
             socket.emit('join room', room);
-            refreshData();
+            renderMainLists();
         }
 
         function closeChatPane() {
