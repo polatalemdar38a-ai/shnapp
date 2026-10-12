@@ -16,7 +16,6 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Mobil Dokunma Gecikmesini Sıfırlayan Optimizasyon */
         * {
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
@@ -77,7 +76,6 @@
         </div>
     </div>
 
-    <!-- Giriş ve Kayıt Ekranı -->
     <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3 overflow-hidden">
@@ -117,7 +115,6 @@
         <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
     </div>
 
-    <!-- Şifremi Unuttum Modali -->
     <div id="forgot-password-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
             <div class="flex justify-between items-center">
@@ -140,7 +137,6 @@
         </div>
     </div>
 
-    <!-- Sohbet Arayüzü -->
     <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92vh] glass-panel md:rounded-3xl luxury-shadow border border-emerald-900/30 hidden flex overflow-hidden">
         
         <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
@@ -416,6 +412,13 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
+            
+            // Service Worker Kaydı (Arka plan kararlılığı için)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log("Service Worker aktif!"))
+                .catch(err => console.log("SW hatası:", err));
+            }
         });
 
         if (window.visualViewport) {
@@ -627,11 +630,12 @@
             document.getElementById('chat-container').classList.remove('hidden');
             document.getElementById('current-username').innerText = username;
             
-            // Socket bağlantısı doğrudan websocket taşıyıcısı ile hızlandırıldı
+            // Socket.io mobil hız ve kopmama optimizasyonu
             socket = io({
-                transports: ['websocket'],
-                reconnectionAttempts: 10,
-                reconnectionDelay: 500
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000
             });
             
             socket.emit('register user', username);

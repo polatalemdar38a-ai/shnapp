@@ -4,7 +4,7 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
-    maxHttpBufferSize: 5e7 // Büyük dosya ve profil resimleri için
+    maxHttpBufferSize: 5e7
 });
 
 app.use(express.json({ limit: '50mb' }));
@@ -16,7 +16,6 @@ const activeSockets = {};
 const messages = {};
 const resetTokens = {};
 
-// KAYIT OL
 app.post('/api/register', (req, res) => {
     const { username, password, email, phone } = req.body;
     if (!username || !password) return res.json({ success: false, message: "Kullanıcı adı ve şifre zorunludur!" });
@@ -44,7 +43,6 @@ app.post('/api/register', (req, res) => {
     res.json({ success: true });
 });
 
-// GİRİŞ YAP
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const user = users.find(u => u.username === username && u.password === password);
@@ -55,7 +53,6 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// ŞİFREMİ UNUTTUM (KOD İSTEĞİ)
 app.post('/api/forgot-password', (req, res) => {
     const { identity } = req.body;
     const user = users.find(u => u.email === identity || u.phone === identity || u.username === identity);
@@ -71,7 +68,6 @@ app.post('/api/forgot-password', (req, res) => {
     res.json({ success: true, message: `Doğrulama kodunuz oluşturuldu! (Test Kodu: ${code})`, username: user.username });
 });
 
-// ŞİFRE SIFIRLAMA (YENİ ŞİFRE)
 app.post('/api/reset-password', (req, res) => {
     const { username, code, newPassword } = req.body;
     if (resetTokens[username] && resetTokens[username] === code) {
@@ -85,7 +81,6 @@ app.post('/api/reset-password', (req, res) => {
     res.json({ success: false, message: "Geçersiz veya hatalı doğrulama kodu!" });
 });
 
-// PROFİL BİLGİLERİ
 app.get('/api/profile-info', (req, res) => {
     const username = req.query.user;
     const user = users.find(u => u.username === username);
@@ -110,7 +105,6 @@ app.get('/api/profile-info', (req, res) => {
     });
 });
 
-// PROFİL AYARLARINI GÜNCELLEME
 app.post('/api/update-profile-settings', (req, res) => {
     const { username, newUsername, bio, avatar, email, phone, showOnline, showReadReceipts } = req.body;
     const user = users.find(u => u.username === username);
