@@ -4,16 +4,16 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
-    maxHttpBufferSize: 1e7 // 10MB dosya/ses yükleme desteği
+    maxHttpBufferSize: 1e7
 });
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-const users = []; // { username, password, bio, showOnline, showReadReceipts, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, lastSeen: 'Çevrimiçi' }
-const groups = []; // { id, name, creator, members: [] }
-const activeSockets = {}; // username -> socket.id
-const messages = {}; // roomId -> [ { sender, payload, time, showReadReceipts } ] - Sohbet silinene kadar mesajları saklar
+const users = [];
+const groups = [];
+const activeSockets = {};
+const messages = {};
 
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
@@ -218,7 +218,6 @@ io.on('connection', (socket) => {
 
     socket.on('join room', (room) => {
         socket.join(room);
-        // Odaya girildiğinde hafızadaki geçmiş mesajları gönder (Sohbet silinene kadar kalır)
         if (messages[room]) {
             socket.emit('load history', messages[room]);
         } else {
@@ -246,7 +245,6 @@ io.on('connection', (socket) => {
         io.to(data.room).emit('chat message', data);
     });
 
-    // Sohbet temizlendiğinde/silindiğinde hafızadan mesajları sil
     socket.on('clear-chat', (room) => {
         if (messages[room]) {
             delete messages[room];
