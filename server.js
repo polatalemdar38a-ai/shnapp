@@ -243,8 +243,6 @@ io.on('connection', (socket) => {
         messages[data.room].push(data);
 
         io.to(data.room).emit('chat message', data);
-        
-        // Mesaj giden odadaki diğer kullanıcılara bildirim tetiklemesi gönder
         socket.to(data.room).emit('trigger unread', { room: data.room });
     });
 
