@@ -420,7 +420,6 @@
             }
         });
 
-        // Telefon ekranı açıldığında bağlantıyı anında tazeleme mekanizması
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
                 if (socket && !socket.connected) {
@@ -710,7 +709,10 @@
                 refreshData();
             });
 
-            socket.on('refresh data', function() { refreshData(); });
+            // ADIM 2: Sunucudan 'refresh data' sinyali geldiği anda telefon uygulamasının arkadaş listesini otomatik yeniden yüklemesi
+            socket.on('refresh data', function() { 
+                refreshData(); 
+            });
 
             socket.on('incoming-call', async (data) => {
                 incomingCallData = data;
@@ -746,8 +748,8 @@
                 const res = await fetch(`/api/profile-info?user=${currentUser}`);
                 const data = await res.json();
                 if (data.success) {
-                    friends = data.friends;
-                    following = data.following;
+                    friends = data.friends || [];
+                    following = data.following || [];
                     pinned = data.pinnedRooms || [];
                     nicknames = data.nicknames || {};
                     myBio = data.bio;

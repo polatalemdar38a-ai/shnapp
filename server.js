@@ -94,11 +94,11 @@ app.get('/api/profile-info', (req, res) => {
         phone: user.phone || "",
         showOnline: user.showOnline !== undefined ? user.showOnline : true,
         showReadReceipts: user.showReadReceipts !== undefined ? user.showReadReceipts : true,
-        friends: user.friends,
-        following: user.following,
-        followers: user.followers,
-        requests: user.requests,
-        notifications: user.notifications,
+        friends: user.friends || [],
+        following: user.following || [],
+        followers: user.followers || [],
+        requests: user.requests || [],
+        notifications: user.notifications || [],
         pinnedRooms: user.pinnedRooms || [],
         nicknames: user.nicknames || {},
         lastSeen: user.showOnline ? user.lastSeen : ""
@@ -152,7 +152,9 @@ app.get('/api/search', (req, res) => {
 app.post('/api/send-request', (req, res) => {
     const { username, targetUser } = req.body;
     const target = users.find(u => u.username === targetUser);
-    if (!target) return res.json({ success: false, message: "Kullanıcı bulunamadı!" });
+    const sender = users.find(u => u.username === username);
+
+    if (!target || !sender) return res.json({ success: false, message: "Kullanıcı bulunamadı!" });
     if (target.requests.some(r => r.from === username)) return res.json({ success: false, message: "Zaten istek gönderilmiş!" });
     if (target.friends.includes(username)) return res.json({ success: false, message: "Zaten arkadaşsınız!" });
 
@@ -173,6 +175,9 @@ app.post('/api/toggle-follow', (req, res) => {
     const target = users.find(u => u.username === targetUser);
     if (!user || !target) return res.json({ success: false });
 
+    if (!user.following) user.following = [];
+    if (!target.followers) target.followers = [];
+
     const isFollowing = user.following.includes(targetUser);
     if (isFollowing) {
         user.following = user.following.filter(f => f !== targetUser);
@@ -189,23 +194,36 @@ app.post('/api/toggle-follow', (req, res) => {
     res.json({ success: true, isFollowing: !isFollowing });
 });
 
+// ADIM 1: Arkadaşlık isteği kabul edildiğinde HER İKİ tarafa da 'refresh data' sinyali gönderilir
 app.post('/api/accept-request', (req, res) => {
     const { username, requester } = req.body;
     const user = users.find(u => u.username === username);
     const reqUser = users.find(u => u.username === requester);
 
     if (user && reqUser) {
-        user.requests = user.requests.filter(r => r.from !== requester);
+        user.requests = (user.requests || []).filter(r => r.from !== requester);
+        
+        if (!user.friends) user.friends = [];
+        if (!reqUser.friends) reqUser.friends = [];
+
         if (!user.friends.includes(requester)) user.friends.push(requester);
         if (!reqUser.friends.includes(username)) reqUser.friends.push(username);
         
         user.notifications.unshift({ text: `@${requester} ile arkadaşlık isteğin onaylandı.`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
         reqUser.notifications.unshift({ text: `@${username} arkadaşlık isteğini onayladı!`, date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
 
-        if (activeSockets[requester]) io.to(activeSockets[requester]).emit('refresh data');
+        // İstek gönderen tarafa (requester) anlık yenileme bildirimi
+        if (activeSockets[requester]) {
+            io.to(activeSockets[requester]).emit('refresh data');
+        }
+        // İsteği onaylayan tarafa (username) anlık yenileme bildirimi
+        if (activeSockets[username]) {
+            io.to(activeSockets[username]).emit('refresh data');
+        }
+
         res.json({ success: true });
     } else {
-        res.json({ success: false });
+        res.json({ success: false, message: "Kullanıcılar bulunamadı." });
     }
 });
 
@@ -243,8 +261,11 @@ app.get('/api/user-groups', (req, res) => {
 app.post('/api/archive', (req, res) => {
     const { username, roomId } = req.body;
     const user = users.find(u => u.username === username);
-    if (user && !user.archivedRooms.includes(roomId)) {
-        user.archivedRooms.push(roomId);
+    if (user) {
+        if (!user.archivedRooms) user.archivedRooms = [];
+        if (!user.archivedRooms.includes(roomId)) {
+            user.archivedRooms.push(roomId);
+        }
     }
     res.json({ success: true });
 });
