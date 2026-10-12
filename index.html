@@ -19,7 +19,6 @@
         .glass-panel { background: rgba(17, 27, 33, 0.96); backdrop-filter: blur(16px); }
         .luxury-shadow { box-shadow: 0 0 40px rgba(37, 211, 102, 0.1); }
         
-        /* Klavyeye tam bitişik ve ekranı sabitleyen yapı */
         html, body {
             height: 100%;
             width: 100%;
@@ -445,16 +444,23 @@
             socket = io();
             socket.emit('register user', username);
 
-            // ANLIK VE GECİKMESİZ MESAJ DİNLEYİCİSİ
             socket.on('chat message', function(data) {
                 if (data.room === currentRoom) {
                     appendMessage(data);
                 } else {
                     unreadRooms[data.room] = true;
                     localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
+                    renderMainLists();
                 }
-                // Listeyi anında ve gecikmesiz güncelle
-                renderMainLists();
+            });
+
+            // Karşı taraftan mesaj tetiklendiğinde yeşil noktayı anında yak
+            socket.on('trigger unread', function(data) {
+                if (data.room !== currentRoom) {
+                    unreadRooms[data.room] = true;
+                    localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
+                    renderMainLists();
+                }
             });
 
             socket.on('load history', function(history) {
@@ -643,6 +649,8 @@
         async function selectRoom(room, name, rawName) {
             currentRoom = room;
             activeFriendName = rawName;
+            
+            // Sohbet açıldığında okunmamış bildirim işaretini (yeşil noktayı) sıfırla ve kaydet
             unreadRooms[room] = false;
             localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
             
