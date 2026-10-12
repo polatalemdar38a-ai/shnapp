@@ -102,7 +102,7 @@
         <!-- Sol Panel -->
         <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#202c33]/50">
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfileSettingsModal()" title="Profil & Ayarları Düzenle">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20" id="profile-initial">S</div>
                     <div>
                         <span id="current-username" class="font-bold text-xs text-white block">Kullanıcı</span>
@@ -163,6 +163,7 @@
 
                 <!-- Dropdown Menü -->
                 <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-[#202c33] border border-gray-800 rounded-2xl shadow-2xl py-2 z-50 hidden">
+                    <button onclick="openContactInfoModal()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> Kişi Bilgisi / Hakkımda</button>
                     <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4"></i> Sohbeti Arşivle</button>
                     <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-950 flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Sohbeti Temizle</button>
                     <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Takma Adı Değiştir</button>
@@ -228,6 +229,50 @@
             <div>
                 <h4 class="text-[11px] font-bold text-teal-400 uppercase tracking-wider mb-2">Bildirim Geçmişi</h4>
                 <div id="notifications-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profil & Gizlilik Ayarları Modalı (Hakkımda, Çevrim İçi, Okundu Bilgisi) -->
+    <div id="profile-settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
+        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-white text-sm">Profil ve Gizlilik Ayarları</h3>
+                <button onclick="closeProfileSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Hakkımda / Durum</label>
+                <input type="text" id="settings-bio-input" placeholder="Hakkımda yazısı..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="space-y-2 pt-2 border-t border-gray-800">
+                <label class="flex items-center space-x-3 text-xs cursor-pointer">
+                    <input type="checkbox" id="settings-show-online" class="rounded bg-gray-900 border-gray-700 text-emerald-600">
+                    <span>Çevrim İçi Bilgimi Göster (Son Görülme)</span>
+                </label>
+                <label class="flex items-center space-x-3 text-xs cursor-pointer">
+                    <input type="checkbox" id="settings-show-read" class="rounded bg-gray-900 border-gray-700 text-emerald-600">
+                    <span>Okundu Bilgisini Göster (Mavi Tik)</span>
+                </label>
+            </div>
+            <button onclick="saveProfileSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30">Değişiklikleri Kaydet</button>
+        </div>
+    </div>
+
+    <!-- Sohbet Edilen Kişinin Bilgisi / Hakkımda Modalı -->
+    <div id="contact-info-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
+        <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl text-center space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-white text-sm">Kişi Bilgisi</h3>
+                <button onclick="closeContactInfoModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="w-20 h-20 bg-emerald-600/20 border border-emerald-500/40 rounded-full mx-auto flex items-center justify-center text-emerald-400 font-bold text-2xl" id="contact-modal-initial">?</div>
+            <div>
+                <h4 id="contact-modal-username" class="font-bold text-base text-white">Kullanıcı</h4>
+                <p id="contact-modal-status" class="text-xs text-emerald-400 mt-0.5">Çevrim içi</p>
+            </div>
+            <div class="bg-gray-900/80 p-3 rounded-2xl border border-gray-800 text-left">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Hakkımda</span>
+                <p id="contact-modal-bio" class="text-xs text-gray-200">Hey there! I am using SHNAPP.</p>
             </div>
         </div>
     </div>
@@ -306,6 +351,10 @@
         let unreadRooms = JSON.parse(localStorage.getItem('shnapp_unread') || "{}");
         let deferredPrompt;
         let typingTimeout = null;
+
+        let myBio = "";
+        let showOnlineSetting = true;
+        let showReadReceiptsSetting = true;
 
         // Gerçek Ses Kaydı (MediaRecorder API) Değişkenleri
         let mediaRecorder;
@@ -484,12 +533,66 @@
                 friends = data.friends;
                 following = data.following;
                 nicknames = data.nicknames || {};
+                myBio = data.bio;
+                showOnlineSetting = data.showOnline;
+                showReadReceiptsSetting = data.showReadReceipts;
+
                 const archRes = await fetch(`/api/archived?user=${currentUser}`);
                 archived = await archRes.json();
 
                 renderMainLists();
                 renderNotifications(data.requests, data.notifications);
             }
+        }
+
+        // Profil ve Gizlilik Ayarları Modalını Aç/Kapat
+        function openProfileSettingsModal() {
+            document.getElementById('profile-settings-modal').classList.remove('hidden');
+            document.getElementById('settings-bio-input').value = myBio;
+            document.getElementById('settings-show-online').checked = showOnlineSetting;
+            document.getElementById('settings-show-read').checked = showReadReceiptsSetting;
+        }
+        function closeProfileSettingsModal() {
+            document.getElementById('profile-settings-modal').classList.add('hidden');
+        }
+
+        async function saveProfileSettings() {
+            const bio = document.getElementById('settings-bio-input').value.trim();
+            const showOnline = document.getElementById('settings-show-online').checked;
+            const showReadReceipts = document.getElementById('settings-show-read').checked;
+
+            const res = await fetch('/api/update-profile-settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, bio, showOnline, showReadReceipts })
+            });
+            const data = await res.json();
+            if (data.success) {
+                myBio = data.bio;
+                showOnlineSetting = data.showOnline;
+                showReadReceiptsSetting = data.showReadReceipts;
+                closeProfileSettingsModal();
+                alert("Ayarlarınız güncellendi!");
+            }
+        }
+
+        // Sohbet Edilen Kişinin Bilgisini Görüntüleme Modalı
+        async function openContactInfoModal() {
+            toggleHeaderMenu();
+            if (!activeFriendName) return;
+
+            const res = await fetch(`/api/profile-info?user=${activeFriendName}`);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('contact-modal-initial').innerText = activeFriendName.charAt(0).toUpperCase();
+                document.getElementById('contact-modal-username').innerText = `@${activeFriendName}`;
+                document.getElementById('contact-modal-status').innerText = data.lastSeen || 'Çevrim dışı';
+                document.getElementById('contact-modal-bio').innerText = data.bio;
+                document.getElementById('contact-info-modal').classList.remove('hidden');
+            }
+        }
+        function closeContactInfoModal() {
+            document.getElementById('contact-info-modal').classList.add('hidden');
         }
 
         async function renderMainLists() {
@@ -732,13 +835,16 @@
                 bodyHtml = `<audio controls src="${data.payload.url}" class="w-60 h-10 my-1"></audio>`;
             }
 
+            // Okundu bilgisi (Mavi tik) ayarı kontrolü
+            const showTicks = isMe ? data.showReadReceipts : true;
+
             item.innerHTML = `
                 <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs relative ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-gray-100 rounded-tl-none'} shadow-md">
                     ${!isMe ? `<span class="block text-[10px] text-emerald-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
                     ${bodyHtml}
                     <div class="flex items-center justify-end gap-1 mt-1 text-[9px] text-gray-300">
                         <span>${data.time || ''}</span>
-                        ${isMe ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-sky-400 inline"></i>' : ''}
+                        ${isMe && showTicks ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-sky-400 inline"></i>' : (isMe ? '<i data-lucide="check" class="w-3.5 h-3.5 text-gray-400 inline"></i>' : '')}
                     </div>
                 </div>
             `;

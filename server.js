@@ -10,7 +10,7 @@ const io = new Server(server, {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(__dirname));
 
-const users = []; // { username, password, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, lastSeen: 'Çevrimiçi' }
+const users = []; // { username, password, bio, showOnline, showReadReceipts, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, lastSeen: 'Çevrimiçi' }
 const groups = []; // { id, name, creator, members: [] }
 const activeSockets = {}; // username -> socket.id
 
@@ -22,6 +22,9 @@ app.post('/api/register', (req, res) => {
     users.push({
         username,
         password,
+        bio: "Hey there! I am using SHNAPP.",
+        showOnline: true,
+        showReadReceipts: true,
         friends: [],
         requests: [],
         notifications: [],
@@ -49,8 +52,47 @@ app.get('/api/search', (req, res) => {
     const currentUser = req.query.user || '';
     const results = users
         .filter(u => u.username.toLowerCase().includes(query.toLowerCase()) && u.username !== currentUser)
-        .map(u => ({ username: u.username }));
+        .map(u => ({ username: u.username, bio: u.bio }));
     res.json(results);
+});
+
+app.get('/api/profile-info', (req, res) => {
+    const username = req.query.user;
+    const user = users.find(u => u.username === username);
+    if (!user) return res.json({ success: false });
+    res.json({
+        success: true,
+        username: user.username,
+        bio: user.bio || "Hey there! I am using SHNAPP.",
+        showOnline: user.showOnline !== undefined ? user.showOnline : true,
+        showReadReceipts: user.showReadReceipts !== undefined ? user.showReadReceipts : true,
+        friends: user.friends,
+        following: user.following,
+        followers: user.followers,
+        requests: user.requests,
+        notifications: user.notifications,
+        nicknames: user.nicknames || {},
+        lastSeen: user.showOnline ? user.lastSeen : ""
+    });
+});
+
+// Hakkımda ve Gizlilik Tercihlerini Güncelleme API'si
+app.post('/api/update-profile-settings', (req, res) => {
+    const { username, bio, showOnline, showReadReceipts } = req.body;
+    const user = users.find(u => u.username === username);
+    if (user) {
+        if (bio !== undefined) user.bio = bio;
+        if (showOnline !== undefined) user.showOnline = showOnline;
+        if (showReadReceipts !== undefined) user.showReadReceipts = showReadReceipts;
+        
+        io.emit('user status change', { 
+            username, 
+            status: user.showOnline ? user.lastSeen : "" 
+        });
+        res.json({ success: true, bio: user.bio, showOnline: user.showOnline, showReadReceipts: user.showReadReceipts });
+    } else {
+        res.json({ success: false });
+    }
 });
 
 app.post('/api/send-request', (req, res) => {
@@ -91,22 +133,6 @@ app.post('/api/toggle-follow', (req, res) => {
         }
     }
     res.json({ success: true, isFollowing: !isFollowing });
-});
-
-app.get('/api/profile-info', (req, res) => {
-    const username = req.query.user;
-    const user = users.find(u => u.username === username);
-    if (!user) return res.json({ success: false });
-    res.json({
-        success: true,
-        friends: user.friends,
-        following: user.following,
-        followers: user.followers,
-        requests: user.requests,
-        notifications: user.notifications,
-        nicknames: user.nicknames || {},
-        lastSeen: user.lastSeen
-    });
 });
 
 app.post('/api/accept-request', (req, res) => {
@@ -182,8 +208,12 @@ io.on('connection', (socket) => {
         currentConnectedUser = username;
         activeSockets[username] = socket.id;
         const user = users.find(u => u.username === username);
-        if (user) user.lastSeen = 'Çevrimiçi';
-        io.emit('user status change', { username, status: 'Çevrimiçi' });
+        if (user) {
+            user.lastSeen = 'Çevrimiçi';
+            if (user.showOnline) {
+                io.emit('user status change', { username, status: 'Çevrimiçi' });
+            }
+        }
     });
 
     socket.on('join room', (room) => {
@@ -199,10 +229,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chat message', (data) => {
+        const senderUser = users.find(u => u.username === data.sender);
+        // Gönderenin mavi tik (okundu bilgisi) ayarı kapalıysa alıcıya bildirilirken gösterilmez
+        data.showReadReceipts = senderUser ? senderUser.showReadReceipts : true;
         io.to(data.room).emit('chat message', data);
     });
 
-    // WebRTC Arama Sinyalleri
     socket.on('call-user', (data) => {
         const targetSocket = activeSockets[data.targetUser];
         if (targetSocket) {
@@ -240,8 +272,12 @@ io.on('connection', (socket) => {
             delete activeSockets[currentConnectedUser];
             const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const user = users.find(u => u.username === currentConnectedUser);
-            if (user) user.lastSeen = `Son görülme: ${timeStr}`;
-            io.emit('user status change', { username: currentConnectedUser, status: `Son görülme: ${timeStr}` });
+            if (user) {
+                user.lastSeen = `Son görülme: ${timeStr}`;
+                if (user.showOnline) {
+                    io.emit('user status change', { username: currentConnectedUser, status: `Son görülme: ${timeStr}` });
+                }
+            }
         }
     });
 });
