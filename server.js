@@ -4,7 +4,7 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
-    maxHttpBufferSize: 5e7 // Büyük dosyalar ve profil resimleri için
+    maxHttpBufferSize: 5e7 // Büyük dosya ve profil resimleri için
 });
 
 app.use(express.json({ limit: '50mb' }));
@@ -14,7 +14,7 @@ const users = [];
 const groups = [];
 const activeSockets = {};
 const messages = {};
-const resetTokens = {}; // Şifre sıfırlama kodları
+const resetTokens = {};
 
 // KAYIT OL
 app.post('/api/register', (req, res) => {
@@ -27,7 +27,7 @@ app.post('/api/register', (req, res) => {
         password,
         email: email || "",
         phone: phone || "",
-        avatar: "", // Profil fotoğrafı (Base64)
+        avatar: "",
         bio: "Hey there! I am using SHNAPP.",
         showOnline: true,
         showReadReceipts: true,
@@ -57,23 +57,21 @@ app.post('/api/login', (req, res) => {
 
 // ŞİFREMİ UNUTTUM (KOD İSTEĞİ)
 app.post('/api/forgot-password', (req, res) => {
-    const { identity } = req.body; // E-posta veya Telefon
+    const { identity } = req.body;
     const user = users.find(u => u.email === identity || u.phone === identity || u.username === identity);
     
     if (!user) {
         return res.json({ success: false, message: "Bu bilgilerle eşleşen kullanıcı bulunamadı!" });
     }
 
-    // 6 Haneli Doğrulama Kodu Üret
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     resetTokens[user.username] = code;
 
-    // Gerçek sistemde SMS/E-posta servisine gönderilir. Şimdilik konsola yazdırıp kullanıcıya bildiriyoruz.
     console.log(`[ŞİFRE SIFIRLAMA KODU] User: ${user.username} | Kod: ${code}`);
     res.json({ success: true, message: `Doğrulama kodunuz oluşturuldu! (Test Kodu: ${code})`, username: user.username });
 });
 
-// ŞİFRE SIFIRLAMA (YENİ ŞİFRE BELİRLEME)
+// ŞİFRE SIFIRLAMA (YENİ ŞİFRE)
 app.post('/api/reset-password', (req, res) => {
     const { username, code, newPassword } = req.body;
     if (resetTokens[username] && resetTokens[username] === code) {
@@ -87,7 +85,7 @@ app.post('/api/reset-password', (req, res) => {
     res.json({ success: false, message: "Geçersiz veya hatalı doğrulama kodu!" });
 });
 
-// PROFİL BİLGİLERİNİ ÇEKME
+// PROFİL BİLGİLERİ
 app.get('/api/profile-info', (req, res) => {
     const username = req.query.user;
     const user = users.find(u => u.username === username);
@@ -112,14 +110,13 @@ app.get('/api/profile-info', (req, res) => {
     });
 });
 
-// PROFİL AYARLARINI GÜNCELLEME (Fotoğraf, Bio, Nick, E-posta, Telefon, Şifre)
+// PROFİL AYARLARINI GÜNCELLEME
 app.post('/api/update-profile-settings', (req, res) => {
     const { username, newUsername, bio, avatar, email, phone, showOnline, showReadReceipts } = req.body;
     const user = users.find(u => u.username === username);
     
     if (!user) return res.json({ success: false, message: "Kullanıcı bulunamadı!" });
 
-    // Eğer kullanıcı adı değiştirilmek isteniyorsa çakışma kontrolü
     if (newUsername && newUsername !== username) {
         if (users.find(u => u.username === newUsername)) {
             return res.json({ success: false, message: "Bu kullanıcı adı zaten başka biri tarafından kullanılıyor!" });

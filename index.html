@@ -16,6 +16,12 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* Mobil Dokunma Gecikmesini Sıfırlayan Optimizasyon */
+        * {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0b141a; }
         ::-webkit-scrollbar-thumb { background: #1f2c34; border-radius: 4px; }
@@ -41,6 +47,12 @@
             align-items: center;
         }
         
+        ul#messages, #sidebar, #chat-pane {
+            -webkit-overflow-scrolling: touch;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
         .chat-bg-pattern {
             background-color: #0b141a;
             background-image: radial-gradient(#111b21 1px, transparent 1px);
@@ -96,7 +108,7 @@
 
         <div id="register-form" class="space-y-3 hidden">
             <input type="text" id="reg-username" placeholder="Kullanıcı adı seç" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <input type="email" id="reg-email" placeholder="E-posta adresi (Şifre sıfırlama için)" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
+            <input type="email" id="reg-email" placeholder="E-posta adresi" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <input type="tel" id="reg-phone" placeholder="Telefon No (Örn: 0555...)" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <button onclick="register()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider">Kayıt Ol</button>
@@ -114,7 +126,7 @@
             </div>
             
             <div id="forgot-step-1" class="space-y-3">
-                <p class="text-xs text-gray-300">Hesabınıza ait Kullanıcı Adı, E-posta veya Telefon numaranızı girin:</p>
+                <p class="text-xs text-gray-300">Kullanıcı Adı, E-posta veya Telefon numaranızı girin:</p>
                 <input type="text" id="forgot-identity-input" placeholder="E-posta, Telefon veya Kullanıcı Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
                 <button onclick="requestResetCode()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Kod Gönder</button>
             </div>
@@ -215,7 +227,6 @@
 
             <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 text-sm"></ul>
 
-            <!-- Yanıtlanan Mesaj Önizleme Alanı -->
             <div id="reply-preview-box" class="hidden px-4 py-2 bg-[#1f2c34] border-t border-gray-800 flex justify-between items-center text-xs shrink-0">
                 <div class="flex items-center space-x-2 truncate">
                     <i data-lucide="reply" class="w-4 h-4 text-emerald-400 shrink-0"></i>
@@ -233,7 +244,7 @@
                     <input type="file" accept="image/*" onchange="sendMediaFile(event, 'image')" class="hidden">
                 </label>
 
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge / Dosya Gönder (PDF, Word vb.)">
+                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge / Dosya Gönder">
                     <i data-lucide="paperclip" class="w-5 h-5"></i>
                     <input type="file" onchange="sendMediaFile(event, 'file')" class="hidden">
                 </label>
@@ -285,7 +296,6 @@
         </div>
     </div>
 
-    <!-- Gelişmiş Profil & Ayarlar Modali -->
     <div id="profile-settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-2">
@@ -293,7 +303,6 @@
                 <button onclick="closeProfileSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
 
-            <!-- Profil Fotoğrafı Değiştirme -->
             <div class="text-center space-y-2">
                 <div class="relative w-24 h-24 mx-auto rounded-full bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center overflow-hidden shadow-xl" id="modal-avatar-preview">
                     <span id="modal-avatar-initial" class="text-2xl font-bold text-emerald-400">S</span>
@@ -433,7 +442,7 @@
         let typingTimeout = null;
 
         let replyingTo = null;
-        let selectedAvatarBase64 = ""; // Seçilen profil resmi
+        let selectedAvatarBase64 = "";
 
         let myBio = "";
         let myEmail = "";
@@ -565,7 +574,6 @@
             }
         }
 
-        // ŞİFREMİ UNUTTUM İŞLEMLERİ
         function openForgotPasswordModal() {
             document.getElementById('forgot-password-modal').classList.remove('hidden');
             document.getElementById('forgot-step-1').classList.remove('hidden');
@@ -619,7 +627,13 @@
             document.getElementById('chat-container').classList.remove('hidden');
             document.getElementById('current-username').innerText = username;
             
-            socket = io();
+            // Socket bağlantısı doğrudan websocket taşıyıcısı ile hızlandırıldı
+            socket = io({
+                transports: ['websocket'],
+                reconnectionAttempts: 10,
+                reconnectionDelay: 500
+            });
+            
             socket.emit('register user', username);
 
             socket.on('chat message', function(data) {
@@ -729,7 +743,6 @@
                     showOnlineSetting = data.showOnline;
                     showReadReceiptsSetting = data.showReadReceipts;
 
-                    // Profil Avatarını Sol Üstte Güncelle
                     const avatarBox = document.getElementById('my-profile-avatar-container');
                     if(data.avatar) {
                         avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
@@ -746,7 +759,6 @@
             } catch(e) {}
         }
 
-        // PROFİL AYARLARI MODALİ İŞLEMLERİ
         function openProfileSettingsModal() {
             document.getElementById('profile-settings-modal').classList.remove('hidden');
             document.getElementById('settings-username-input').value = currentUser;
