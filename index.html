@@ -233,7 +233,7 @@
         </div>
     </div>
 
-    <!-- Profil & Gizlilik Ayarları Modalı (Hakkımda, Çevrim İçi, Okundu Bilgisi) -->
+    <!-- Profil & Gizlilik Ayarları Modalı -->
     <div id="profile-settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
             <div class="flex justify-between items-center mb-2">
@@ -324,12 +324,10 @@
 </div>
 
     <script>
-        // Lucide İkonlarını Başlatma
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
         });
 
-        // Mobil Klavye Uyum Yöneticisi
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const viewport = document.getElementById('app-viewport');
@@ -356,12 +354,10 @@
         let showOnlineSetting = true;
         let showReadReceiptsSetting = true;
 
-        // Gerçek Ses Kaydı (MediaRecorder API) Değişkenleri
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
 
-        // WebRTC Değişkenleri
         let peerConnection;
         let localStream;
         let incomingCallData = null;
@@ -473,6 +469,14 @@
                 }
             });
 
+            socket.on('load history', function(history) {
+                const msgList = document.getElementById('messages');
+                msgList.innerHTML = "";
+                history.forEach(data => {
+                    appendMessage(data);
+                });
+            });
+
             socket.on('user typing', function(data) {
                 if (data.room === currentRoom && data.username !== currentUser) {
                     document.getElementById('active-room-sub').innerText = "yazıyor...";
@@ -500,7 +504,6 @@
 
             socket.on('refresh data', function() { refreshData(); });
 
-            // WebRTC Dinleyicileri
             socket.on('incoming-call', async (data) => {
                 incomingCallData = data;
                 document.getElementById('call-modal').classList.remove('hidden');
@@ -545,7 +548,6 @@
             }
         }
 
-        // Profil ve Gizlilik Ayarları Modalını Aç/Kapat
         function openProfileSettingsModal() {
             document.getElementById('profile-settings-modal').classList.remove('hidden');
             document.getElementById('settings-bio-input').value = myBio;
@@ -576,7 +578,6 @@
             }
         }
 
-        // Sohbet Edilen Kişinin Bilgisini Görüntüleme Modalı
         async function openContactInfoModal() {
             toggleHeaderMenu();
             if (!activeFriendName) return;
@@ -718,7 +719,10 @@
         }
 
         function clearOrDeleteChat() {
-            document.getElementById('messages').innerHTML = "";
+            if (currentRoom) {
+                document.getElementById('messages').innerHTML = "";
+                socket.emit('clear-chat', currentRoom);
+            }
             toggleHeaderMenu();
         }
 
@@ -757,7 +761,6 @@
             toggleHeaderMenu();
         }
 
-        // Gerçek Mikrofon Ses Kaydı (MediaRecorder API)
         async function toggleVoiceRecord() {
             const micBtn = document.getElementById('voice-record-btn');
             if (!isRecording) {
@@ -835,7 +838,6 @@
                 bodyHtml = `<audio controls src="${data.payload.url}" class="w-60 h-10 my-1"></audio>`;
             }
 
-            // Okundu bilgisi (Mavi tik) ayarı kontrolü
             const showTicks = isMe ? data.showReadReceipts : true;
 
             item.innerHTML = `
@@ -854,7 +856,6 @@
             lucide.createIcons();
         }
 
-        // WebRTC Görüşme Fonksiyonları
         async function startCall(isVideo) {
             if (!activeFriendName) { alert("Sohbet seçin!"); return; }
             document.getElementById('call-modal').classList.remove('hidden');

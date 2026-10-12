@@ -13,6 +13,7 @@ app.use(express.static(__dirname));
 const users = []; // { username, password, bio, showOnline, showReadReceipts, friends: [], requests: [], notifications: [], following: [], followers: [], archivedRooms: [], nicknames: {}, lastSeen: 'Çevrimiçi' }
 const groups = []; // { id, name, creator, members: [] }
 const activeSockets = {}; // username -> socket.id
+const messages = {}; // roomId -> [ { sender, payload, time, showReadReceipts } ] - Sohbet silinene kadar mesajları saklar
 
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
@@ -76,7 +77,6 @@ app.get('/api/profile-info', (req, res) => {
     });
 });
 
-// Hakkımda ve Gizlilik Tercihlerini Güncelleme API'si
 app.post('/api/update-profile-settings', (req, res) => {
     const { username, bio, showOnline, showReadReceipts } = req.body;
     const user = users.find(u => u.username === username);
@@ -218,6 +218,12 @@ io.on('connection', (socket) => {
 
     socket.on('join room', (room) => {
         socket.join(room);
+        // Odaya girildiğinde hafızadaki geçmiş mesajları gönder (Sohbet silinene kadar kalır)
+        if (messages[room]) {
+            socket.emit('load history', messages[room]);
+        } else {
+            socket.emit('load history', []);
+        }
     });
 
     socket.on('typing', (data) => {
@@ -230,9 +236,21 @@ io.on('connection', (socket) => {
 
     socket.on('chat message', (data) => {
         const senderUser = users.find(u => u.username === data.sender);
-        // Gönderenin mavi tik (okundu bilgisi) ayarı kapalıysa alıcıya bildirilirken gösterilmez
         data.showReadReceipts = senderUser ? senderUser.showReadReceipts : true;
+        
+        if (!messages[data.room]) {
+            messages[data.room] = [];
+        }
+        messages[data.room].push(data);
+
         io.to(data.room).emit('chat message', data);
+    });
+
+    // Sohbet temizlendiğinde/silindiğinde hafızadan mesajları sil
+    socket.on('clear-chat', (room) => {
+        if (messages[room]) {
+            delete messages[room];
+        }
     });
 
     socket.on('call-user', (data) => {
