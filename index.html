@@ -559,10 +559,9 @@
                     localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
                     renderMainLists();
 
-                    // Sesli ve Görsel Canlı Bildirim
                     if (Notification.permission === "granted") {
                         new Notification(`SHNAPP: @${data.sender}`, {
-                            body: data.payload.type === 'text' ? data.payload.content : "Yeni bir medya mesajı var!",
+                            body: data.payload.type === 'text' ? data.payload.content : "Yeni medya mesajı!",
                             icon: "/logo.png"
                         });
                     }
@@ -635,6 +634,11 @@
 
             refreshData();
             setTimeout(() => startPermissionsSequence(), 800);
+
+            if (window.innerWidth < 768) {
+                document.getElementById('chat-pane').classList.add('hidden');
+                document.getElementById('sidebar').classList.remove('hidden');
+            }
         }
 
         async function refreshData() {
@@ -1181,7 +1185,7 @@
         }
 
         async function createGroup() {
-            const groupName = document.getElementById('group-name-input').value;
+            const groupName = document.getElementById('group-name-input-value') || document.getElementById('group-name-input').value;
             const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
             const members = Array.from(checkboxes).map(cb => cb.value);
 
