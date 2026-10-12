@@ -445,15 +445,16 @@
             socket = io();
             socket.emit('register user', username);
 
+            // ANLIK VE GECİKMESİZ MESAJ DİNLEYİCİSİ
             socket.on('chat message', function(data) {
                 if (data.room === currentRoom) {
                     appendMessage(data);
                 } else {
                     unreadRooms[data.room] = true;
                     localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
-                    // Sadece sol listeyi gecikmesiz hızlıca güncelle (tam yenileme yok)
-                    renderMainLists();
                 }
+                // Listeyi anında ve gecikmesiz güncelle
+                renderMainLists();
             });
 
             socket.on('load history', function(history) {
@@ -474,7 +475,11 @@
             socket.on('user stop typing', function(data) {
                 if (data.room === currentRoom && data.username !== currentUser) {
                     document.getElementById('active-room-sub').classList.remove("animate-pulse");
-                    refreshData();
+                    if (activeFriendName) {
+                        fetch(`/api/profile-info?user=${activeFriendName}`).then(res => res.json()).then(d => {
+                            document.getElementById('active-room-sub').innerText = d.lastSeen || 'Çevrimdışı';
+                        });
+                    }
                 }
             });
 
@@ -517,22 +522,24 @@
         }
 
         async function refreshData() {
-            const res = await fetch(`/api/profile-info?user=${currentUser}`);
-            const data = await res.json();
-            if (data.success) {
-                friends = data.friends;
-                following = data.following;
-                nicknames = data.nicknames || {};
-                myBio = data.bio;
-                showOnlineSetting = data.showOnline;
-                showReadReceiptsSetting = data.showReadReceipts;
+            try {
+                const res = await fetch(`/api/profile-info?user=${currentUser}`);
+                const data = await res.json();
+                if (data.success) {
+                    friends = data.friends;
+                    following = data.following;
+                    nicknames = data.nicknames || {};
+                    myBio = data.bio;
+                    showOnlineSetting = data.showOnline;
+                    showReadReceiptsSetting = data.showReadReceipts;
 
-                const archRes = await fetch(`/api/archived?user=${currentUser}`);
-                archived = await archRes.json();
+                    const archRes = await fetch(`/api/archived?user=${currentUser}`);
+                    archived = await archRes.json();
 
-                renderMainLists();
-                renderNotifications(data.requests, data.notifications);
-            }
+                    renderMainLists();
+                    renderNotifications(data.requests, data.notifications);
+                }
+            } catch(e) {}
         }
 
         function openProfileSettingsModal() {
