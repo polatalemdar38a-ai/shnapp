@@ -10,7 +10,7 @@
     
     <link rel="apple-touch-icon" href="logo.png">
     <link rel="icon" type="image/png" href="logo.png">
-    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b141a%22%2C%22theme_color%22%3A%22%2325d366%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D'>
+    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b141a%22%2C%22theme_color%22%3A%22%2325d366%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D'>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -413,11 +413,22 @@
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
             
-            // Service Worker Kaydı (Arka plan kararlılığı için)
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js')
                 .then(() => console.log("Service Worker aktif!"))
                 .catch(err => console.log("SW hatası:", err));
+            }
+        });
+
+        // Telefon ekranı açıldığında bağlantıyı anında tazeleme mekanizması
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                if (socket && !socket.connected) {
+                    socket.connect();
+                }
+                if (currentUser) {
+                    refreshData();
+                }
             }
         });
 
@@ -630,7 +641,6 @@
             document.getElementById('chat-container').classList.remove('hidden');
             document.getElementById('current-username').innerText = username;
             
-            // Socket.io mobil hız ve kopmama optimizasyonu
             socket = io({
                 transports: ['websocket', 'polling'],
                 reconnection: true,
