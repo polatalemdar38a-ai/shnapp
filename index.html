@@ -7,7 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0b141a">
-    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b141a%22%2C%22theme_color%22%3A%22%2325d366%22%7D">
+    
+    <!-- Özel Logo ve PWA İkon Tanımlamaları -->
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22/%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b141a%22%2C%22theme_color%22%3A%22%2325d366%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D'>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -64,8 +68,8 @@
 
     <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3">
-                <i data-lucide="message-square" class="w-9 h-9"></i>
+            <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3 overflow-hidden">
+                <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
             </div>
             <h1 class="text-2xl font-extrabold tracking-wider text-white">SHNAPP</h1>
             <p class="text-xs text-emerald-400 mt-1 font-medium">Hızlı, Güvenli ve Şık Mesajlaşma</p>
@@ -99,7 +103,9 @@
         <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#202c33]/50">
                 <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfileSettingsModal()" title="Profil & Ayarları Düzenle">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20" id="profile-initial">S</div>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20 overflow-hidden" id="profile-initial">
+                        <span id="profile-initial-text">S</span>
+                    </div>
                     <div>
                         <span id="current-username" class="font-bold text-xs text-white block">Kullanıcı</span>
                         <span class="text-[9px] text-emerald-400 font-semibold tracking-wider flex items-center gap-1">
@@ -192,6 +198,7 @@
         </div>
     </div>
 
+    <!-- Modaller -->
     <div id="search-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -348,19 +355,16 @@
         let incomingCallData = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-        // PWA Kısayol Etkinliği Yakalama
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
         });
 
-        // SIRALI İZİN AKIŞI
+        // Sıralı İzin Akışı
         async function startPermissionsSequence() {
-            // 1. ADIM: Kısayol (PWA) İsteği
             if (deferredPrompt) {
                 document.getElementById('pwa-install-banner').classList.remove('hidden');
             } else {
-                // Kısayol imkanı yoksa doğrudan Bildirim adımına geç
                 await requestNotificationPermissionStep();
             }
         }
@@ -372,37 +376,29 @@
                 deferredPrompt = null;
             }
             document.getElementById('pwa-install-banner').classList.add('hidden');
-            // Sonraki adıma geç
             await requestNotificationPermissionStep();
         }
 
         async function closeInstallBanner() {
             document.getElementById('pwa-install-banner').classList.add('hidden');
-            // Sonraki adıma geç
             await requestNotificationPermissionStep();
         }
 
-        // 2. ADIM: Bildirim İzni
         async function requestNotificationPermissionStep() {
             if ("Notification" in window && Notification.permission === "default") {
                 try {
                     await Notification.requestPermission();
                 } catch(e) {}
             }
-            // Sonraki adıma geç
             await requestMediaPermissionsStep();
         }
 
-        // 3. ADIM: Kamera ve Mikrofon İzni
         async function requestMediaPermissionsStep() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    // İzin alındıktan sonra geçici akışı kapat
                     stream.getTracks().forEach(track => track.stop());
-                } catch (err) {
-                    console.log("Kamera/Mikrofon izni reddedildi veya cihazda bulunamadı.");
-                }
+                } catch (err) {}
             }
         }
 
@@ -477,7 +473,7 @@
             document.getElementById('auth-container').classList.add('hidden');
             document.getElementById('chat-container').classList.remove('hidden');
             document.getElementById('current-username').innerText = username;
-            document.getElementById('profile-initial').innerText = username.charAt(0).toUpperCase();
+            document.getElementById('profile-initial').innerHTML = `<img src="logo.png" class="w-full h-full object-cover">`;
             
             socket = io();
             socket.emit('register user', username);
@@ -563,7 +559,6 @@
 
             refreshData();
 
-            // Uygulamaya girildikten hemen sonra sıralı izin akışını başlat
             setTimeout(() => {
                 startPermissionsSequence();
             }, 800);
