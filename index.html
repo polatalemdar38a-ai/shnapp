@@ -20,7 +20,6 @@
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #0b141a; }
         ::-webkit-scrollbar-thumb { background: #1f2c34; border-radius: 4px; }
@@ -28,35 +27,13 @@
         .luxury-shadow { box-shadow: 0 0 40px rgba(37, 211, 102, 0.1); }
         
         html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            margin: 0;
-            padding: 0;
-            background-color: #0b141a;
+            height: 100%; width: 100%; overflow: hidden;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            margin: 0; padding: 0; background-color: #0b141a;
         }
-
-        #app-viewport {
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        ul#messages, #sidebar, #chat-pane {
-            -webkit-overflow-scrolling: touch;
-            transform: translateZ(0);
-            backface-visibility: hidden;
-        }
-
-        .chat-bg-pattern {
-            background-color: #0b141a;
-            background-image: radial-gradient(#111b21 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
+        #app-viewport { height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; }
+        ul#messages, #sidebar, #chat-pane { -webkit-overflow-scrolling: touch; transform: translateZ(0); backface-visibility: hidden; }
+        .chat-bg-pattern { background-color: #0b141a; background-image: radial-gradient(#111b21 1px, transparent 1px); background-size: 20px 20px; }
     </style>
 </head>
 <body class="text-gray-100 font-sans select-none">
@@ -67,7 +44,7 @@
             <i data-lucide="smartphone" class="w-6 h-6"></i>
             <div>
                 <h4 class="font-bold text-xs">SHNAPP'i Ana Ekrana Ekle</h4>
-                <p class="text-[10px] text-emerald-100">Uygulama gibi tek dokunuşla başlat!</p>
+                <p class="text-[10px] text-emerald-100">Tek dokunuşla mesajlaşmaya başla!</p>
             </div>
         </div>
         <div class="flex space-x-2">
@@ -76,13 +53,14 @@
         </div>
     </div>
 
+    <!-- Giriş Yap & Kayıt Ol -->
     <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
         <div class="text-center mb-6">
             <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3 overflow-hidden">
                 <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
             </div>
             <h1 class="text-2xl font-extrabold tracking-wider text-white">SHNAPP</h1>
-            <p class="text-xs text-emerald-400 mt-1 font-medium">Hızlı, Güvenli ve Şık Mesajlaşma</p>
+            <p class="text-xs text-emerald-400 mt-1 font-medium">Hızlı ve Güvenli Mesajlaşma</p>
         </div>
         
         <div class="flex mb-6 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
@@ -93,11 +71,9 @@
         <div id="login-form" class="space-y-4">
             <input type="text" id="login-username" placeholder="Kullanıcı adı" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <input type="password" id="login-password" placeholder="Şifre" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            
             <div class="text-right">
                 <button onclick="openForgotPasswordModal()" class="text-[11px] text-emerald-400 hover:underline">Şifremi Unuttum?</button>
             </div>
-
             <button onclick="login()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider flex justify-center items-center gap-2">
                 <span>Giriş Yap</span>
                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
@@ -111,23 +87,21 @@
             <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
             <button onclick="register()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider">Kayıt Ol</button>
         </div>
-        
         <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
     </div>
 
+    <!-- Şifremi Unuttum Modal -->
     <div id="forgot-password-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
             <div class="flex justify-between items-center">
                 <h3 class="font-bold text-white text-sm">Şifre Sıfırlama</h3>
                 <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            
             <div id="forgot-step-1" class="space-y-3">
-                <p class="text-xs text-gray-300">Kullanıcı Adı, E-posta veya Telefon numaranızı girin:</p>
+                <p class="text-xs text-gray-300">Kullanıcı Adı, E-posta veya Telefonunuzu girin:</p>
                 <input type="text" id="forgot-identity-input" placeholder="E-posta, Telefon veya Kullanıcı Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
                 <button onclick="requestResetCode()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Kod Gönder</button>
             </div>
-
             <div id="forgot-step-2" class="space-y-3 hidden">
                 <p class="text-xs text-emerald-400" id="forgot-code-info">Doğrulama kodunuz oluşturuldu.</p>
                 <input type="text" id="forgot-code-input" placeholder="6 Haneli Doğrulama Kodu" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
@@ -137,11 +111,12 @@
         </div>
     </div>
 
+    <!-- Mesajlaşma Ana Ekranı -->
     <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92vh] glass-panel md:rounded-3xl luxury-shadow border border-emerald-900/30 hidden flex overflow-hidden">
         
         <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#202c33]/50">
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfileSettingsModal()" title="Profil & Ayarları Düzenle">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfileSettingsModal()">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20 overflow-hidden shrink-0 border border-emerald-500/30" id="my-profile-avatar-container">
                         <span id="profile-initial-text">S</span>
                     </div>
@@ -167,15 +142,13 @@
                 <div>
                     <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2 mt-1">Sabitlenenler</div>
                     <div id="pinned-list" class="space-y-1 mb-3"></div>
-                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2">Sohbetler</div>
+                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2">Arkadaşlarım</div>
                     <div id="friends-list" class="space-y-1"></div>
                 </div>
-
                 <div>
                     <div class="text-[10px] font-bold text-teal-400 px-3 uppercase tracking-widest mb-2">Gruplar</div>
                     <div id="groups-list" class="space-y-1"></div>
                 </div>
-
                 <div>
                     <div class="text-[10px] font-bold text-gray-500 px-3 uppercase tracking-widest mb-2">Arşivlenenler</div>
                     <div id="archived-list" class="space-y-1"></div>
@@ -184,7 +157,6 @@
         </div>
 
         <div id="chat-pane" class="hidden md:flex flex-1 flex-col justify-between chat-bg-pattern h-full relative overflow-hidden">
-            
             <div class="px-4 md:px-6 py-3 border-b border-gray-800/80 bg-[#202c33] flex items-center justify-between shrink-0 z-10">
                 <div class="flex items-center space-x-3">
                     <button onclick="closeChatPane()" class="md:hidden text-emerald-400 font-bold p-1"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
@@ -193,7 +165,7 @@
                     </div>
                     <div>
                         <h3 id="active-room-title" onclick="toggleHeaderMenu()" class="font-bold text-sm text-white flex items-center gap-1.5 cursor-pointer hover:text-emerald-400 transition">Sohbet Seçin</h3>
-                        <span class="text-[11px] text-emerald-400 block -mt-0.5" id="active-room-sub">Sol menüden bir kişi seçin</span>
+                        <span class="text-[11px] text-emerald-400 block -mt-0.5" id="active-room-sub">Sol menüden arkadaşınızı seçin</span>
                     </div>
                 </div>
 
@@ -209,10 +181,6 @@
                     <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4"></i> Sohbeti Arşivle</button>
                     <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-950 flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Sohbeti Temizle</button>
                     <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Takma Adı Değiştir</button>
-                    <label class="w-full text-left px-4 py-2.5 text-xs text-teal-300 hover:bg-gray-800 flex items-center gap-2 cursor-pointer">
-                        <i data-lucide="image" class="w-4 h-4"></i> Arka Plan Değiştir
-                        <input type="file" accept="image/*" onchange="changeChatTheme(event)" class="hidden">
-                    </label>
                 </div>
             </div>
 
@@ -239,22 +207,17 @@
                     <i data-lucide="camera" class="w-5 h-5"></i>
                     <input type="file" accept="image/*" onchange="sendMediaFile(event, 'image')" class="hidden">
                 </label>
-
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge / Dosya Gönder">
+                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge Gönder">
                     <i data-lucide="paperclip" class="w-5 h-5"></i>
                     <input type="file" onchange="sendMediaFile(event, 'file')" class="hidden">
                 </label>
-
-                <button type="button" onclick="sendLocation()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Anlık Konum Paylaş">
+                <button type="button" onclick="sendLocation()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Konum Paylaş">
                     <i data-lucide="map-pin" class="w-5 h-5"></i>
                 </button>
-
-                <button type="button" id="voice-record-btn" onclick="toggleVoiceRecord()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Ses Kaydı Gönder">
-                    <i data-lucide="mic" class="w-5 h-5" id="mic-icon"></i>
+                <button type="button" id="voice-record-btn" onclick="toggleVoiceRecord()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Ses Kaydı">
+                    <i data-lucide="mic" class="w-5 h-5"></i>
                 </button>
-
                 <input id="m" autocomplete="off" oninput="handleTyping()" placeholder="Mesaj yazın..." class="flex-1 px-4 py-2.5 bg-[#111b21] border border-gray-800 rounded-full text-xs text-white focus:outline-none focus:border-emerald-500 placeholder-gray-500" />
-                
                 <button class="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full transition shadow-lg shadow-emerald-600/30 shrink-0 flex items-center justify-center">
                     <i data-lucide="send" class="w-4 h-4"></i>
                 </button>
@@ -266,11 +229,10 @@
     <div id="search-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-sm">Kişi Ara & Takip Et</h3>
+                <h3 class="font-bold text-white text-sm">Arkadaş Ara & Ekle</h3>
                 <button onclick="closeSearchModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <input type="text" id="modal-search-input" oninput="performSearch()" placeholder="Kullanıcı adı ara..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mb-4">
-            <div class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2">Sonuçlar</div>
+            <input type="text" id="modal-search-input" oninput="performSearch()" placeholder="Kullanıcı adı yazın..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mb-4">
             <div id="modal-search-results" class="space-y-2 max-h-60 overflow-y-auto"></div>
         </div>
     </div>
@@ -278,7 +240,7 @@
     <div id="notifications-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-sm">Bildirimler</h3>
+                <h3 class="font-bold text-white text-sm">Bildirimler & İstekler</h3>
                 <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="mb-4">
@@ -295,52 +257,27 @@
     <div id="profile-settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
         <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-white text-sm">Profil ve Hesap Ayarları</h3>
+                <h3 class="font-bold text-white text-sm">Profil Ayarları</h3>
                 <button onclick="closeProfileSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-
             <div class="text-center space-y-2">
                 <div class="relative w-24 h-24 mx-auto rounded-full bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center overflow-hidden shadow-xl" id="modal-avatar-preview">
                     <span id="modal-avatar-initial" class="text-2xl font-bold text-emerald-400">S</span>
                 </div>
                 <label class="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer transition">
-                    <span>Profil Fotoğrafı Seç</span>
+                    <span>Fotoğraf Seç</span>
                     <input type="file" accept="image/*" onchange="previewAvatar(event)" class="hidden">
                 </label>
             </div>
-
             <div>
-                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Kullanıcı Adı (Nick)</label>
+                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Kullanıcı Adı</label>
                 <input type="text" id="settings-username-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
             </div>
-
             <div>
-                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Hakkımda / Durum</label>
-                <input type="text" id="settings-bio-input" placeholder="Hakkımda yazısı..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
+                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Hakkımda</label>
+                <input type="text" id="settings-bio-input" placeholder="Hakkımda..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
             </div>
-
-            <div>
-                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">E-Posta Adresi</label>
-                <input type="email" id="settings-email-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-            </div>
-
-            <div>
-                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Telefon Numarası</label>
-                <input type="tel" id="settings-phone-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-            </div>
-
-            <div class="space-y-2 pt-2 border-t border-gray-800">
-                <label class="flex items-center space-x-3 text-xs cursor-pointer">
-                    <input type="checkbox" id="settings-show-online" class="rounded bg-gray-900 border-gray-700 text-emerald-600">
-                    <span>Çevrim İçi Bilgimi Göster (Son Görülme)</span>
-                </label>
-                <label class="flex items-center space-x-3 text-xs cursor-pointer">
-                    <input type="checkbox" id="settings-show-read" class="rounded bg-gray-900 border-gray-700 text-emerald-600">
-                    <span>Okundu Bilgisini Göster (Mavi Tik)</span>
-                </label>
-            </div>
-
-            <button onclick="saveProfileSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30">Değişiklikleri Kaydet</button>
+            <button onclick="saveProfileSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30">Kaydet</button>
         </div>
     </div>
 
@@ -393,18 +330,16 @@
             <h3 id="call-status-title" class="text-lg font-bold text-white">Aranıyor...</h3>
             <p id="call-status-sub" class="text-xs text-emerald-400 mt-1">Bağlantı kuruluyor</p>
         </div>
-
         <div class="relative w-full max-w-2xl h-[60vh] bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 flex items-center justify-center my-auto">
             <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
             <video id="local-video" autoplay playsinline muted class="absolute bottom-4 right-4 w-32 h-44 bg-black/50 rounded-2xl border-2 border-emerald-500 object-cover shadow-2xl"></video>
         </div>
-
         <div class="flex items-center space-x-6 mb-6">
             <div id="incoming-call-controls" class="hidden flex space-x-4">
-                <button onclick="acceptCall()" class="w-14 h-14 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center shadow-lg shadow-emerald-600/40"><i data-lucide="phone" class="w-6 h-6"></i></button>
-                <button onclick="rejectCall()" class="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center shadow-lg shadow-red-600/40"><i data-lucide="phone-off" class="w-6 h-6"></i></button>
+                <button onclick="acceptCall()" class="w-14 h-14 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center"><i data-lucide="phone" class="w-6 h-6"></i></button>
+                <button onclick="rejectCall()" class="w-14 h-14 rounded-full bg-red-600 text-white font-bold flex items-center justify-center"><i data-lucide="phone-off" class="w-6 h-6"></i></button>
             </div>
-            <button id="end-call-btn" onclick="endCall()" class="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold flex items-center justify-center shadow-lg shadow-red-600/40"><i data-lucide="phone-off" class="w-6 h-6"></i></button>
+            <button id="end-call-btn" onclick="endCall()" class="w-14 h-14 rounded-full bg-red-600 text-white font-bold flex items-center justify-center"><i data-lucide="phone-off" class="w-6 h-6"></i></button>
         </div>
     </div>
 </div>
@@ -412,22 +347,17 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
-            
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log("Service Worker aktif!"))
-                .catch(err => console.log("SW hatası:", err));
+                .then(() => console.log("SW Aktif!"))
+                .catch(err => console.log("SW Hata:", err));
             }
         });
 
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === "visible") {
-                if (socket && !socket.connected) {
-                    socket.connect();
-                }
-                if (currentUser) {
-                    refreshData();
-                }
+                if (socket && !socket.connected) socket.connect();
+                if (currentUser) refreshData();
             }
         });
 
@@ -438,7 +368,6 @@
                 const msgBox = document.getElementById('messages');
                 if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
             });
-            window.visualViewport.addEventListener('scroll', () => { window.scrollTo(0, 0); });
         }
 
         let currentUser = localStorage.getItem('shnapp_user') || "";
@@ -446,27 +375,22 @@
         let activeFriendName = "";
         let socket;
         let friends = [];
-        let following = [];
         let archived = [];
         let pinned = [];
         let nicknames = {};
         let unreadRooms = JSON.parse(localStorage.getItem('shnapp_unread') || "{}");
         let deferredPrompt = null;
         let typingTimeout = null;
-
         let replyingTo = null;
         let selectedAvatarBase64 = "";
-
         let myBio = "";
         let myEmail = "";
         let myPhone = "";
         let showOnlineSetting = true;
         let showReadReceiptsSetting = true;
-
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
-
         let peerConnection;
         let localStream;
         let incomingCallData = null;
@@ -502,26 +426,12 @@
 
         async function requestNotificationPermissionStep() {
             if ("Notification" in window && Notification.permission === "default") {
-                try {
-                    await Notification.requestPermission();
-                } catch(e) {}
-            }
-            await requestMediaPermissionsStep();
-        }
-
-        async function requestMediaPermissionsStep() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                    stream.getTracks().forEach(track => track.stop());
-                } catch (err) {}
+                try { await Notification.requestPermission(); } catch(e) {}
             }
         }
 
         window.onload = () => {
-            if (currentUser) {
-                initApp(currentUser);
-            }
+            if (currentUser) initApp(currentUser);
         };
 
         function switchTab(tab) {
@@ -529,15 +439,12 @@
             const regForm = document.getElementById('register-form');
             const tabLogin = document.getElementById('tab-login');
             const tabReg = document.getElementById('tab-register');
-            
             if (tab === 'login') {
-                loginForm.classList.remove('hidden');
-                regForm.classList.add('hidden');
+                loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
                 tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-emerald-600 text-white transition shadow";
                 tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
             } else {
-                regForm.classList.remove('hidden');
-                loginForm.classList.add('hidden');
+                regForm.classList.remove('hidden'); loginForm.classList.add('hidden');
                 tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-emerald-600 text-white transition shadow";
                 tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
             }
@@ -592,13 +499,11 @@
             document.getElementById('forgot-step-1').classList.remove('hidden');
             document.getElementById('forgot-step-2').classList.add('hidden');
         }
-        function closeForgotPasswordModal() {
-            document.getElementById('forgot-password-modal').classList.add('hidden');
-        }
+        function closeForgotPasswordModal() { document.getElementById('forgot-password-modal').classList.add('hidden'); }
 
         async function requestResetCode() {
             const identity = document.getElementById('forgot-identity-input').value.trim();
-            if(!identity) return alert("Lütfen bilginizi girin!");
+            if(!identity) return alert("Bilginizi girin!");
 
             const res = await fetch('/api/forgot-password', {
                 method: 'POST',
@@ -611,15 +516,13 @@
                 document.getElementById('forgot-step-2').classList.remove('hidden');
                 document.getElementById('forgot-code-info').innerText = data.message;
                 window.resetTargetUser = data.username;
-            } else {
-                alert(data.message);
-            }
+            } else alert(data.message);
         }
 
         async function submitResetPassword() {
             const code = document.getElementById('forgot-code-input').value.trim();
             const newPassword = document.getElementById('forgot-new-password').value.trim();
-            if(!code || !newPassword) return alert("Tüm alanları doldurun!");
+            if(!code || !newPassword) return alert("Boş bırakmayın!");
 
             const res = await fetch('/api/reset-password', {
                 method: 'POST',
@@ -628,11 +531,8 @@
             });
             const data = await res.json();
             if(data.success) {
-                alert(data.message);
-                closeForgotPasswordModal();
-            } else {
-                alert(data.message);
-            }
+                alert(data.message); closeForgotPasswordModal();
+            } else alert(data.message);
         }
 
         function initApp(username) {
@@ -640,13 +540,7 @@
             document.getElementById('chat-container').classList.remove('hidden');
             document.getElementById('current-username').innerText = username;
             
-            socket = io({
-                transports: ['websocket', 'polling'],
-                reconnection: true,
-                reconnectionAttempts: Infinity,
-                reconnectionDelay: 1000
-            });
-            
+            socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity });
             socket.emit('register user', username);
 
             socket.on('chat message', function(data) {
@@ -664,6 +558,14 @@
                     unreadRooms[data.room] = true;
                     localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
                     renderMainLists();
+
+                    // Sesli ve Görsel Canlı Bildirim
+                    if (Notification.permission === "granted") {
+                        new Notification(`SHNAPP: @${data.sender}`, {
+                            body: data.payload.type === 'text' ? data.payload.content : "Yeni bir medya mesajı var!",
+                            icon: "/logo.png"
+                        });
+                    }
                 }
             });
 
@@ -675,9 +577,7 @@
             socket.on('load history', function(history) {
                 const msgList = document.getElementById('messages');
                 msgList.innerHTML = "";
-                history.forEach(data => {
-                    appendMessage(data);
-                });
+                history.forEach(data => appendMessage(data));
             });
 
             socket.on('user typing', function(data) {
@@ -709,9 +609,8 @@
                 refreshData();
             });
 
-            // ADIM 2: Sunucudan 'refresh data' sinyali geldiği anda telefon uygulamasının arkadaş listesini otomatik yeniden yüklemesi
-            socket.on('refresh data', function() { 
-                refreshData(); 
+            socket.on('refresh data', function() {
+                refreshData();
             });
 
             socket.on('incoming-call', async (data) => {
@@ -729,18 +628,13 @@
             });
 
             socket.on('ice-candidate', async (data) => {
-                if (peerConnection) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-                }
+                if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
             });
 
-            socket.on('call-ended', () => { closeCallModal(); });
+            socket.on('call-ended', () => closeCallModal());
 
             refreshData();
-
-            setTimeout(() => {
-                startPermissionsSequence();
-            }, 800);
+            setTimeout(() => startPermissionsSequence(), 800);
         }
 
         async function refreshData() {
@@ -749,7 +643,6 @@
                 const data = await res.json();
                 if (data.success) {
                     friends = data.friends || [];
-                    following = data.following || [];
                     pinned = data.pinnedRooms || [];
                     nicknames = data.nicknames || {};
                     myBio = data.bio;
@@ -760,11 +653,8 @@
                     showReadReceiptsSetting = data.showReadReceipts;
 
                     const avatarBox = document.getElementById('my-profile-avatar-container');
-                    if(data.avatar) {
-                        avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
-                    } else {
-                        avatarBox.innerHTML = `<span class="text-sm font-bold">${currentUser.charAt(0).toUpperCase()}</span>`;
-                    }
+                    if(data.avatar) avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
+                    else avatarBox.innerHTML = `<span class="text-sm font-bold">${currentUser.charAt(0).toUpperCase()}</span>`;
 
                     const archRes = await fetch(`/api/archived?user=${currentUser}`);
                     archived = await archRes.json();
@@ -779,21 +669,11 @@
             document.getElementById('profile-settings-modal').classList.remove('hidden');
             document.getElementById('settings-username-input').value = currentUser;
             document.getElementById('settings-bio-input').value = myBio;
-            document.getElementById('settings-email-input').value = myEmail;
-            document.getElementById('settings-phone-input').value = myPhone;
-            document.getElementById('settings-show-online').checked = showOnlineSetting;
-            document.getElementById('settings-show-read').checked = showReadReceiptsSetting;
-
             const preview = document.getElementById('modal-avatar-preview');
-            if(selectedAvatarBase64) {
-                preview.innerHTML = `<img src="${selectedAvatarBase64}" class="w-full h-full object-cover">`;
-            } else {
-                preview.innerHTML = `<span class="text-2xl font-bold text-emerald-400">${currentUser.charAt(0).toUpperCase()}</span>`;
-            }
+            if(selectedAvatarBase64) preview.innerHTML = `<img src="${selectedAvatarBase64}" class="w-full h-full object-cover">`;
+            else preview.innerHTML = `<span class="text-2xl font-bold text-emerald-400">${currentUser.charAt(0).toUpperCase()}</span>`;
         }
-        function closeProfileSettingsModal() {
-            document.getElementById('profile-settings-modal').classList.add('hidden');
-        }
+        function closeProfileSettingsModal() { document.getElementById('profile-settings-modal').classList.add('hidden'); }
 
         function previewAvatar(e) {
             const file = e.target.files[0];
@@ -810,40 +690,20 @@
         async function saveProfileSettings() {
             const newUsername = document.getElementById('settings-username-input').value.trim();
             const bio = document.getElementById('settings-bio-input').value.trim();
-            const email = document.getElementById('settings-email-input').value.trim();
-            const phone = document.getElementById('settings-phone-input').value.trim();
-            const showOnline = document.getElementById('settings-show-online').checked;
-            const showReadReceipts = document.getElementById('settings-show-read').checked;
 
             const res = await fetch('/api/update-profile-settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    username: currentUser, 
-                    newUsername,
-                    bio, 
-                    avatar: selectedAvatarBase64,
-                    email,
-                    phone,
-                    showOnline, 
-                    showReadReceipts 
-                })
+                body: JSON.stringify({ username: currentUser, newUsername, bio, avatar: selectedAvatarBase64 })
             });
             const data = await res.json();
             if (data.success) {
                 currentUser = data.username;
                 localStorage.setItem('shnapp_user', currentUser);
                 document.getElementById('current-username').innerText = currentUser;
-                
-                myBio = data.bio;
-                showOnlineSetting = data.showOnline;
-                showReadReceiptsSetting = data.showReadReceipts;
                 closeProfileSettingsModal();
                 refreshData();
-                alert("Profil ayarlarınız güncellendi!");
-            } else {
-                alert(data.message || "Güncelleme başarısız!");
-            }
+            } else alert(data.message || "Hata oluştu!");
         }
 
         async function openContactInfoModal() {
@@ -854,20 +714,15 @@
             const data = await res.json();
             if (data.success) {
                 const avatarBox = document.getElementById('contact-modal-avatar-box');
-                if(data.avatar) {
-                    avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
-                } else {
-                    avatarBox.innerHTML = `<span class="text-xl font-bold text-emerald-400">${activeFriendName.charAt(0).toUpperCase()}</span>`;
-                }
+                if(data.avatar) avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
+                else avatarBox.innerHTML = `<span class="text-xl font-bold text-emerald-400">${activeFriendName.charAt(0).toUpperCase()}</span>`;
                 document.getElementById('contact-modal-username').innerText = `@${activeFriendName}`;
                 document.getElementById('contact-modal-status').innerText = data.lastSeen || 'Çevrim dışı';
                 document.getElementById('contact-modal-bio').innerText = data.bio;
                 document.getElementById('contact-info-modal').classList.remove('hidden');
             }
         }
-        function closeContactInfoModal() {
-            document.getElementById('contact-info-modal').classList.add('hidden');
-        }
+        function closeContactInfoModal() { document.getElementById('contact-info-modal').classList.add('hidden'); }
 
         async function renderMainLists() {
             const friendsEl = document.getElementById('friends-list');
@@ -882,7 +737,7 @@
                 const isArchived = archived.includes(roomName);
                 const hasUnread = unreadRooms[roomName];
                 const displayName = nicknames[f] || f;
-                const item = createListItem(displayName, 'Kişisel Mesaj', roomName, 'user', hasUnread, f);
+                const item = createListItem(displayName, 'Mesaj Gönder', roomName, 'user', hasUnread, f);
                 
                 if (isPinned && !isArchived) pinnedEl.appendChild(item);
                 else if (isArchived) archEl.appendChild(item);
@@ -897,7 +752,6 @@
                     const isArchived = archived.includes(g.id);
                     const hasUnread = unreadRooms[g.id];
                     const item = createListItem(g.name, 'Grup Sohbeti', g.id, 'users', hasUnread, null);
-                    
                     if (isPinned && !isArchived) pinnedEl.appendChild(item);
                     else if (isArchived) archEl.appendChild(item);
                     else groupsEl.appendChild(item);
@@ -958,7 +812,6 @@
             document.getElementById('sidebar').classList.remove('hidden');
             currentRoom = ""; activeFriendName = "";
             document.getElementById('header-dropdown').classList.add('hidden');
-            document.getElementById('inline-search-bar').classList.add('hidden');
         }
 
         function handleTyping() {
@@ -1041,30 +894,12 @@
             }
         }
 
-        function changeChatTheme(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const chatPane = document.getElementById('chat-pane');
-                    chatPane.style.backgroundImage = `url('${e.target.result}')`;
-                    chatPane.style.backgroundSize = 'cover';
-                }
-                reader.readAsDataURL(file);
-            }
-            toggleHeaderMenu();
-        }
-
         function sendMediaFile(event, type) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = e => {
-                    sendCustomMessage({
-                        type: type,
-                        url: e.target.result,
-                        fileName: file.name
-                    });
+                    sendCustomMessage({ type: type, url: e.target.result, fileName: file.name });
                 };
                 reader.readAsDataURL(file);
             }
@@ -1075,17 +910,8 @@
                 navigator.geolocation.getCurrentPosition(position => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    const mapUrl = `https://maps.google.com/?q=${lat},${lon}`;
-                    sendCustomMessage({
-                        type: 'location',
-                        url: mapUrl,
-                        text: '📍 Konum Paylaşıldı'
-                    });
-                }, () => {
-                    alert("Konum alınamadı!");
-                });
-            } else {
-                alert("Tarayıcınız konum özelliğini desteklemiyor.");
+                    sendCustomMessage({ type: 'location', url: `https://maps.google.com/?q=${lat},${lon}`, text: '📍 Anlık Konum' });
+                }, () => alert("Konum alınamadı!"));
             }
         }
 
@@ -1101,16 +927,12 @@
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         const reader = new FileReader();
                         reader.readAsDataURL(audioBlob);
-                        reader.onloadend = () => {
-                            sendCustomMessage({ type: 'audio', url: reader.result });
-                        };
+                        reader.onloadend = () => sendCustomMessage({ type: 'audio', url: reader.result });
                     };
                     mediaRecorder.start();
                     isRecording = true;
                     micBtn.classList.add('text-red-500', 'animate-pulse');
-                } catch (err) {
-                    alert("Mikrofon izni gerekli!");
-                }
+                } catch (err) { alert("Mikrofon izni gerekli!"); }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
@@ -1157,7 +979,7 @@
         }
 
         function deleteMessage(msgId) {
-            if (confirm("Bu mesajı herkesten silmek istiyor musunuz?")) {
+            if (confirm("Mesaj silinsin mi?")) {
                 socket.emit('delete message', { room: currentRoom, msgId });
             }
         }
@@ -1178,37 +1000,17 @@
                 bodyHtml = `<img src="${data.payload.url}" class="rounded-xl max-w-xs max-h-60 object-cover my-1" />`;
                 rawTextForReply = "[Fotoğraf]";
             } else if (data.payload.type === 'file') {
-                bodyHtml = `
-                    <a href="${data.payload.url}" download="${data.payload.fileName}" class="flex items-center gap-2 bg-black/20 p-2.5 rounded-xl hover:bg-black/30 transition text-white">
-                        <i data-lucide="file-text" class="w-6 h-6"></i>
-                        <span class="underline truncate max-w-[180px] text-xs">${data.payload.fileName || 'Dosya'}</span>
-                    </a>
-                `;
-                rawTextForReply = `[Dosya: ${data.payload.fileName}]`;
+                bodyHtml = `<a href="${data.payload.url}" download="${data.payload.fileName}" class="flex items-center gap-2 bg-black/20 p-2.5 rounded-xl hover:bg-black/30 transition text-white"><i data-lucide="file-text" class="w-6 h-6"></i><span class="underline truncate max-w-[180px] text-xs">${data.payload.fileName || 'Dosya'}</span></a>`;
+                rawTextForReply = "[Dosya]";
             } else if (data.payload.type === 'location') {
-                bodyHtml = `
-                    <a href="${data.payload.url}" target="_blank" class="flex items-center gap-2 bg-emerald-950/60 p-2.5 rounded-xl hover:bg-emerald-950 transition text-emerald-300 border border-emerald-800/50">
-                        <i data-lucide="map-pin" class="w-6 h-6 shrink-0"></i>
-                        <span class="text-xs font-bold underline">Canlı Konum Haritasını Aç</span>
-                    </a>
-                `;
+                bodyHtml = `<a href="${data.payload.url}" target="_blank" class="flex items-center gap-2 bg-emerald-950/60 p-2.5 rounded-xl text-emerald-300 border border-emerald-800/50"><i data-lucide="map-pin" class="w-6 h-6 shrink-0"></i><span class="text-xs font-bold underline">Canlı Konumu Aç</span></a>`;
                 rawTextForReply = "[Konum]";
             } else if (data.payload.type === 'audio') {
                 bodyHtml = `<audio controls src="${data.payload.url}" class="w-60 h-10 my-1"></audio>`;
                 rawTextForReply = "[Ses Kaydı]";
             }
 
-            let replyHtml = "";
-            if (data.replyTo) {
-                replyHtml = `
-                    <div class="bg-black/20 border-l-2 border-emerald-400 pl-2 py-1 mb-1 rounded text-[10px] text-gray-300">
-                        <span class="font-bold text-emerald-400">@${data.replyTo.sender}</span>
-                        <p class="truncate">${data.replyTo.text}</p>
-                    </div>
-                `;
-            }
-
-            const showTicks = isMe ? data.showReadReceipts : true;
+            let replyHtml = data.replyTo ? `<div class="bg-black/20 border-l-2 border-emerald-400 pl-2 py-1 mb-1 rounded text-[10px] text-gray-300"><span class="font-bold text-emerald-400">@${data.replyTo.sender}</span><p class="truncate">${data.replyTo.text}</p></div>` : '';
 
             item.innerHTML = `
                 <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs relative ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-gray-100 rounded-tl-none'} shadow-md">
@@ -1217,24 +1019,22 @@
                     ${bodyHtml}
                     <div class="flex items-center justify-end gap-1 mt-1 text-[9px] text-gray-300">
                         <span>${data.time || ''}</span>
-                        ${isMe && showTicks ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-sky-400 inline"></i>' : (isMe ? '<i data-lucide="check" class="w-3.5 h-3.5 text-gray-400 inline"></i>' : '')}
+                        ${isMe ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-sky-400 inline"></i>' : ''}
                     </div>
-                    
                     <div class="absolute -top-3 ${isMe ? '-left-16' : '-right-16'} hidden group-hover:flex items-center gap-1 bg-[#111b21] p-1 rounded-lg border border-gray-800 shadow-xl z-10">
-                        <button onclick="setReplyTo('${data.id}', '${data.sender}', '${rawTextForReply.replace(/'/g, "\\'")}')" class="p-1 hover:bg-gray-800 rounded text-emerald-400" title="Yanıtla"><i data-lucide="reply" class="w-3.5 h-3.5"></i></button>
-                        ${isMe ? `<button onclick="deleteMessage('${data.id}')" class="p-1 hover:bg-red-950 rounded text-red-400" title="Herkesten Sil"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                        <button onclick="setReplyTo('${data.id}', '${data.sender}', '${rawTextForReply.replace(/'/g, "\\'")}')" class="p-1 hover:bg-gray-800 rounded text-emerald-400"><i data-lucide="reply" class="w-3.5 h-3.5"></i></button>
+                        ${isMe ? `<button onclick="deleteMessage('${data.id}')" class="p-1 hover:bg-red-950 rounded text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
                     </div>
                 </div>
             `;
             const msgList = document.getElementById('messages');
             msgList.appendChild(item);
             msgList.scrollTop = msgList.scrollHeight;
-            
             lucide.createIcons();
         }
 
         async function startCall(isVideo) {
-            if (!activeFriendName) { alert("Sohbet seçin!"); return; }
+            if (!activeFriendName) return alert("Sohbet seçin!");
             document.getElementById('call-modal').classList.remove('hidden');
             document.getElementById('incoming-call-controls').classList.add('hidden');
             document.getElementById('end-call-btn').classList.remove('hidden');
@@ -1249,20 +1049,13 @@
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
                 socket.emit('call-user', { targetUser: activeFriendName, from: currentUser, offer, isVideo });
-            } catch (err) {
-                alert("Kamera/Mikrofon izni gerekli!");
-                closeCallModal();
-            }
+            } catch (err) { alert("İzin gerekli!"); closeCallModal(); }
         }
 
         function createPeerConnection(targetUser) {
             peerConnection = new RTCPeerConnection(rtcConfig);
-            peerConnection.onicecandidate = e => {
-                if (e.candidate) socket.emit('ice-candidate', { targetUser, candidate: e.candidate });
-            };
-            peerConnection.ontrack = e => {
-                document.getElementById('remote-video').srcObject = e.streams[0];
-            };
+            peerConnection.onicecandidate = e => { if (e.candidate) socket.emit('ice-candidate', { targetUser, candidate: e.candidate }); };
+            peerConnection.ontrack = e => { document.getElementById('remote-video').srcObject = e.streams[0]; };
         }
 
         async function acceptCall() {
@@ -1299,8 +1092,6 @@
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (peerConnection) { peerConnection.close(); peerConnection = null; }
             document.getElementById('call-modal').classList.add('hidden');
-            document.getElementById('local-video').srcObject = null;
-            document.getElementById('remote-video').srcObject = null;
             incomingCallData = null;
         }
 
@@ -1318,12 +1109,7 @@
             const box = document.getElementById('group-friends-checkboxes');
             box.innerHTML = "";
             friends.forEach(f => {
-                box.innerHTML += `
-                    <label class="flex items-center space-x-2 text-xs cursor-pointer">
-                        <input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-900 border-gray-700 text-emerald-600">
-                        <span>@${f}</span>
-                    </label>
-                `;
+                box.innerHTML += `<label class="flex items-center space-x-2 text-xs cursor-pointer"><input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-900 border-gray-700 text-emerald-600"><span>@${f}</span></label>`;
             });
         }
         function closeGroupModal() { document.getElementById('group-modal').classList.add('hidden'); }
@@ -1341,9 +1127,8 @@
                 div.className = "flex justify-between items-center bg-gray-900/80 px-3 py-2.5 rounded-xl text-xs text-white border border-gray-800";
                 div.innerHTML = `
                     <span>@${u.username}</span>
-                    <div class="flex gap-1.5">
-                        <button onclick="toggleFollow('${u.username}')" class="bg-gray-800 hover:bg-gray-700 px-2.5 py-1 rounded-lg text-[10px] font-semibold">Takip Et</button>
-                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-emerald-400 font-semibold text-[10px] self-center">Arkadaşsın</span>'}
+                    <div>
+                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-emerald-400 font-semibold text-[10px]">Arkadaşsınız</span>'}
                     </div>
                 `;
                 resultsEl.appendChild(div);
@@ -1360,33 +1145,18 @@
             alert(data.success ? "İstek gönderildi!" : data.message);
         }
 
-        async function toggleFollow(targetUser) {
-            await fetch('/api/toggle-follow', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser })
-            });
-            refreshData();
-        }
-
         async function renderNotifications(reqs, notifs) {
             const reqList = document.getElementById('requests-list');
             const notifList = document.getElementById('notifications-list');
             reqList.innerHTML = ""; notifList.innerHTML = "";
 
-            if (reqs.length > 0 || notifs.length > 0) {
-                document.getElementById('notif-badge').classList.remove('hidden');
-            }
+            if (reqs.length > 0) document.getElementById('notif-badge').classList.remove('hidden');
 
             reqs.forEach(req => {
-                const isFollowingBack = following.includes(req.from);
                 reqList.innerHTML += `
                     <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white">
                         <span>@${req.from}</span>
-                        <div class="flex gap-1.5">
-                            <button onclick="acceptRequest('${req.from}')" class="bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 rounded-lg text-[10px] font-bold">Onayla</button>
-                            <button onclick="toggleFollow('${req.from}')" class="bg-teal-600 hover:bg-teal-500 px-2.5 py-1 rounded-lg text-[10px] font-semibold">${isFollowingBack ? 'Takiptesin' : 'Geri Takip Et'}</button>
-                        </div>
+                        <button onclick="acceptRequest('${req.from}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded-lg text-[10px] font-bold">Kabul Et</button>
                     </div>
                 `;
             });
@@ -1424,7 +1194,7 @@
             if (data.success) {
                 closeGroupModal(); refreshData();
                 selectRoom(data.groupId, data.groupName, null);
-            } else { alert(data.message); }
+            } else alert(data.message);
         }
 
         function logout() {
