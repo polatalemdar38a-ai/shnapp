@@ -10,61 +10,132 @@
 </head>
 <body class="bg-gray-900 text-gray-100 h-screen flex flex-col overflow-hidden">
 
-  <!-- Giriş Ekranı -->
-  <div id="login-screen" class="flex items-center justify-center h-full">
+  <!-- Giriş / Kayıt / Şifre Kurtarma Ekranı -->
+  <div id="auth-screen" class="flex items-center justify-center h-full">
     <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-96 text-center border border-gray-700">
-      <h1 class="text-3xl font-bold mb-2 text-emerald-400">SHNAPP</h1>
+      <h1 class="text-3xl font-bold mb-1 text-emerald-400">SHNAPP</h1>
       <p class="text-xs text-gray-400 mb-6">WhatsApp Klonu</p>
-      <input type="text" id="username-input" placeholder="Kullanıcı Adınız (Örn: ahmet)" class="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 focus:outline-none focus:border-emerald-500 mb-4 text-white text-sm">
-      <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-semibold transition shadow-lg shadow-emerald-900/50 text-sm">Giriş Yap</button>
+      
+      <div id="login-form" class="space-y-3">
+        <input type="text" id="login-user" placeholder="Kullanıcı Adı" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <input type="password" id="login-pass" placeholder="Şifre" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-semibold text-sm transition">Giriş Yap</button>
+        <div class="flex justify-between text-xs text-gray-400 pt-2">
+          <button onclick="switchAuthMode('register')" class="hover:text-emerald-400">Kayıt Ol</button>
+          <button onclick="switchAuthMode('forgot')" class="hover:text-emerald-400">Şifremi Unuttum</button>
+        </div>
+      </div>
+
+      <div id="register-form" class="space-y-3 hidden">
+        <input type="text" id="reg-user" placeholder="Kullanıcı Adı Seçin" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <input type="password" id="reg-pass" placeholder="Şifre Belirleyin" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <input type="text" id="reg-phone" placeholder="Telefon Numarası" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <input type="email" id="reg-email" placeholder="E-posta Adresi" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <button onclick="register()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-semibold text-sm transition">Kayıt Ol</button>
+        <button onclick="switchAuthMode('login')" class="text-xs text-gray-400 hover:text-emerald-400 pt-2 block mx-auto">Giriş Ekranına Dön</button>
+      </div>
+
+      <div id="forgot-form" class="space-y-3 hidden">
+        <input type="text" id="forgot-user" placeholder="Kullanıcı Adınız" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <input type="text" id="forgot-contact" placeholder="Kayıtlı E-posta veya Telefon" class="w-full px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <button onclick="recoverPassword()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl font-semibold text-sm transition">Şifreyi Kurtar</button>
+        <button onclick="switchAuthMode('login')" class="text-xs text-gray-400 hover:text-emerald-400 pt-2 block mx-auto">Giriş Ekranına Dön</button>
+      </div>
     </div>
   </div>
 
   <!-- Ana Sohbet Ekranı -->
   <div id="app-screen" class="hidden flex h-full">
-    <!-- Sol Panel: Sohbet Listesi ve İzinler -->
+    <!-- Sol Panel: Arkadaşlar, Yeni Kişi, Grup ve Ayarlar Sekmeleri -->
     <div class="w-1/3 bg-gray-800 border-r border-gray-700 flex flex-col">
-      <div class="p-4 bg-gray-850 border-b border-gray-700 flex justify-between items-center">
-        <span id="current-user-label" class="font-bold text-emerald-400 text-sm"></span>
-        <button onclick="requestAllPermissions()" class="text-xs bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1.5 rounded-lg transition">İzinleri Ver</button>
+      <div class="p-3 bg-gray-850 border-b border-gray-700 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <img id="my-profile-img" src="" class="w-8 h-8 rounded-full bg-gray-700 object-cover border border-emerald-500 cursor-pointer" onclick="document.getElementById('profile-pic-input').click()" title="Profil Fotoğrafını Değiştir">
+          <input type="file" id="profile-pic-input" class="hidden" accept="image/*" onchange="updateProfilePic(event)">
+          <span id="current-user-label" class="font-bold text-emerald-400 text-xs"></span>
+        </div>
+        <button onclick="requestAllPermissions()" class="text-[10px] bg-emerald-700 hover:bg-emerald-600 px-2 py-1 rounded transition">İzinler</button>
       </div>
-      <div class="p-3 border-b border-gray-700">
-        <input type="text" id="target-user-input" placeholder="Mesaj atılacak kişi ID..." class="w-full px-3 py-2 rounded-lg bg-gray-700 text-sm border border-gray-600 focus:outline-none focus:border-emerald-500">
+
+      <!-- Navigasyon Sekmeleri -->
+      <div class="flex justify-around bg-gray-900 py-2 border-b border-gray-700 text-xs">
+        <button onclick="switchTab('chats')" class="text-emerald-400 font-semibold hover:text-emerald-300">Arkadaşlarım</button>
+        <button onclick="switchTab('add')" class="text-gray-400 hover:text-emerald-300">+ Yeni Kişi</button>
+        <button onclick="switchTab('group')" class="text-gray-400 hover:text-emerald-300">+ Grup Kur</button>
+        <button onclick="switchTab('settings')" class="text-gray-400 hover:text-emerald-300">⚙️ Ayarlar</button>
       </div>
-      <div id="chat-list" class="flex-1 overflow-y-auto p-4 text-xs text-gray-400 text-center">
-        Aktif sohbet için yukarıdan kullanıcı ID'si girin.
+
+      <!-- Sekme İçerikleri -->
+      <div id="tab-content" class="flex-1 overflow-y-auto p-2">
+        <!-- Varsayılan Arkadaşlar Listesi -->
+        <div id="friends-list" class="space-y-1">
+          <div class="text-xs text-gray-500 text-center pt-10">Henüz sohbet açılmadı veya arkadaş eklenmedi.</div>
+        </div>
+
+        <!-- Yeni Kişi Ekleme -->
+        <div id="tab-add" class="hidden space-y-3 p-2">
+          <h3 class="text-xs font-bold text-emerald-400">Yeni Arkadaş Ekle</h3>
+          <input type="text" id="new-friend-id" placeholder="Kullanıcı ID / Adı" class="w-full px-3 py-2 rounded bg-gray-700 text-xs border border-gray-600 focus:outline-none">
+          <button onclick="addFriend()" class="w-full bg-emerald-600 py-1.5 rounded text-xs font-semibold">Sohbet Başlat</button>
+        </div>
+
+        <!-- Grup Oluşturma -->
+        <div id="tab-group" class="hidden space-y-3 p-2">
+          <h3 class="text-xs font-bold text-emerald-400">Yeni Grup Kur</h3>
+          <input type="text" id="group-name-input" placeholder="Grup Adı" class="w-full px-3 py-2 rounded bg-gray-700 text-xs border border-gray-600 focus:outline-none">
+          <input type="text" id="group-members-input" placeholder="Üyeler (Virgülle ayırın: ali,veli)" class="w-full px-3 py-2 rounded bg-gray-700 text-xs border border-gray-600 focus:outline-none">
+          <button onclick="createGroup()" class="w-full bg-emerald-600 py-1.5 rounded text-xs font-semibold">Grubu Oluştur</button>
+        </div>
+
+        <!-- Ayarlar -->
+        <div id="tab-settings" class="hidden space-y-3 p-2 text-xs">
+          <h3 class="font-bold text-emerald-400">Uygulama Ayarları</h3>
+          <p class="text-gray-400">SHNAPP v2.0 - WhatsApp Klonu</p>
+          <button onclick="logout()" class="w-full bg-red-600 hover:bg-red-500 py-1.5 rounded font-semibold">Çıkış Yap</button>
+        </div>
       </div>
     </div>
 
-    <!-- Sağ Panel: Mesajlaşma ve Arama Alanı -->
+    <!-- Sağ Panel: Mesajlaşma ve Grup/DM Ayarları -->
     <div class="w-2/3 flex flex-col bg-gray-900 relative">
-      <div id="chat-header" class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center shadow-md">
-        <span id="active-chat-title" class="font-semibold text-sm">SHNAPP Sohbet</span>
-        <div class="space-x-2">
-          <button onclick="startCall(true)" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-xs transition font-medium">📞 Sesli Ara</button>
-          <button onclick="startCall(false)" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs transition font-medium">📹 Görüntülü Ara</button>
+      <div id="chat-header" class="p-3 bg-gray-800 border-b border-gray-700 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-2">
+          <span id="active-chat-title" class="font-semibold text-sm">Aktif Sohbet Yok</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="startCall(true)" class="bg-blue-600 hover:bg-blue-500 px-2.5 py-1 rounded text-xs">📞 Sesli</button>
+          <button onclick="startCall(false)" class="bg-purple-600 hover:bg-purple-500 px-2.5 py-1 rounded text-xs">📹 Görüntülü</button>
+          <!-- Grup/DM Ayarları Açılır Butonu -->
+          <button onclick="toggleChatSettings()" class="bg-gray-700 hover:bg-gray-600 px-2.5 py-1 rounded text-xs">⚙️ Ayarlar</button>
         </div>
       </div>
 
-      <!-- WebRTC Arama Ekranı (Video / Ses) -->
+      <!-- Grup / DM Ayar Menüsü (Gizli Başlar) -->
+      <div id="chat-settings-box" class="hidden absolute top-14 right-2 bg-gray-800 border border-gray-700 rounded-xl p-3 z-40 shadow-xl w-48 text-xs space-y-2">
+        <button onclick="clearChat()" class="w-full text-left px-2 py-1.5 hover:bg-gray-700 rounded text-gray-200">Sohbeti Sil</button>
+        <button onclick="blockUser()" class="w-full text-left px-2 py-1.5 hover:bg-gray-700 rounded text-red-400">Kişiyi Engelle</button>
+        <button onclick="leaveGroup()" class="w-full text-left px-2 py-1.5 hover:bg-gray-700 rounded text-yellow-400">Gruptan Ayrıl</button>
+      </div>
+
+      <!-- WebRTC Arama Ekranı -->
       <div id="call-box" class="hidden absolute top-16 left-0 right-0 bg-gray-950/95 z-50 p-6 flex flex-col items-center border-b border-gray-700 shadow-2xl backdrop-blur">
         <div class="flex space-x-4 mb-4">
-          <div class="relative"><video id="localVideo" autoplay muted playsinline class="w-36 h-36 bg-black rounded-xl object-cover border border-gray-600"></video><span class="absolute bottom-2 left-2 text-[10px] bg-black/70 px-2 rounded">Siz</span></div>
-          <div class="relative"><video id="remoteVideo" autoplay playsinline class="w-36 h-36 bg-black rounded-xl object-cover border border-emerald-500"></video><span class="absolute bottom-2 left-2 text-[10px] bg-black/70 px-2 rounded">Karşı Taraf</span></div>
+          <div class="relative"><video id="localVideo" autoplay muted playsinline class="w-32 h-32 bg-black rounded-xl object-cover border border-gray-600"></video><span class="absolute bottom-1 left-1 text-[9px] bg-black/70 px-1.5 rounded">Siz</span></div>
+          <div class="relative"><video id="remoteVideo" autoplay playsinline class="w-32 h-32 bg-black rounded-xl object-cover border border-emerald-500"></video><span class="absolute bottom-1 left-1 text-[9px] bg-black/70 px-1.5 rounded">Karşı Taraf</span></div>
         </div>
-        <button onclick="endCall()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-xl text-xs font-semibold transition">Aramayı Sonlandır</button>
+        <button onclick="endCall()" class="bg-red-600 hover:bg-red-500 px-5 py-1.5 rounded-xl text-xs font-semibold">Aramayı Sonlandır</button>
       </div>
 
       <!-- Mesajlar Listesi -->
       <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
 
-      <!-- Medya, Dosya ve Mesaj Gönderme Alanı -->
+      <!-- Mesaj Gönderme Alanı -->
       <div class="p-3 bg-gray-800 border-t border-gray-700 flex items-center space-x-2">
-        <label class="cursor-pointer bg-gray-700 hover:bg-gray-600 px-3 py-2.5 rounded-xl text-xs text-gray-300 transition" title="Galeri ve Dosya Ekle">
+        <label class="cursor-pointer bg-gray-700 hover:bg-gray-600 px-2.5 py-2 rounded-xl text-xs text-gray-300" title="Dosya/Galeri">
           📁 <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
         </label>
-        <input type="text" id="message-input" placeholder="Bir mesaj yazın..." class="flex-1 px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 focus:outline-none focus:border-emerald-500 text-sm">
-        <button onclick="sendMessage()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-xl font-semibold transition text-sm">Gönder</button>
+        <input type="text" id="message-input" placeholder="Bir mesaj yazın..." class="flex-1 px-4 py-2 rounded-xl bg-gray-700 border border-gray-600 text-sm focus:outline-none focus:border-emerald-500">
+        <button onclick="sendMessage()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-xl text-sm font-semibold">Gönder</button>
       </div>
     </div>
   </div>
@@ -72,38 +143,98 @@
   <script>
     let socket;
     let myId;
-    let targetId = "";
+    let currentChatTarget = "";
+    let isCurrentGroup = false;
     let localStream;
     let peerConnection;
     let incomingCallerSocketId = null;
+    let chats = {}; // targetId -> messages array
 
-    const rtcConfig = {
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
-    };
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
-    async function login() {
-      myId = document.getElementById('username-input').value.trim();
-      if (!myId) return alert("Kullanıcı adı giriniz!");
+    function switchAuthMode(mode) {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('register-form').classList.add('hidden');
+      document.getElementById('forgot-form').classList.add('hidden');
+      if (mode === 'login') document.getElementById('login-form').classList.remove('hidden');
+      if (mode === 'register') document.getElementById('register-form').classList.remove('hidden');
+      if (mode === 'forgot') document.getElementById('forgot-form').classList.remove('hidden');
+    }
+
+    function register() {
+      const userId = document.getElementById('reg-user').value.trim();
+      const password = document.getElementById('reg-pass').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      if (!userId || !password) return alert("Kullanıcı adı ve şifre zorunludur!");
 
       socket = io();
-      socket.emit('register_user', myId);
+      socket.emit('register', { userId, password, phone, email }, (res) => {
+        if (res.success) {
+          alert("Kayıt başarılı! Giriş yapabilirsiniz.");
+          switchAuthMode('login');
+        } else {
+          alert(res.message);
+        }
+      });
+    }
 
-      document.getElementById('login-screen').classList.add('hidden');
-      document.getElementById('app-screen').classList.remove('hidden');
-      document.getElementById('current-user-label').innerText = `SHNAPP: ${myId}`;
+    function login() {
+      const userId = document.getElementById('login-user').value.trim();
+      const password = document.getElementById('login-pass').value.trim();
+      if (!userId || !password) return alert("Bilgileri eksiksiz doldurun!");
 
-      requestAllPermissions();
-      registerServiceWorker();
+      if (!socket) socket = io();
+      socket.emit('login', { userId, password }, (res) => {
+        if (res.success) {
+          myId = userId;
+          document.getElementById('auth-screen').classList.add('hidden');
+          document.getElementById('app-screen').classList.remove('hidden');
+          document.getElementById('current-user-label').innerText = myId;
+          if (res.profilePic) document.getElementById('my-profile-img').src = res.profilePic;
 
+          initSocketListeners();
+          requestAllPermissions();
+          registerServiceWorker();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+
+    function recoverPassword() {
+      const userId = document.getElementById('forgot-user').value.trim();
+      const contact = document.getElementById('forgot-contact').value.trim();
+      if (!socket) socket = io();
+      socket.emit('recover_password', { userId, contact }, (res) => {
+        if (res.success) alert(`Şifreniz: ${res.password}`);
+        else alert(res.message);
+      });
+    }
+
+    function logout() { location.reload(); }
+
+    function initSocketListeners() {
       socket.on('receive_message', (data) => {
-        appendMessage(data.senderId, data.message, 'incoming');
+        const key = data.isGroup ? data.receiverId : data.senderId;
+        if (!chats[key]) chats[key] = [];
+        chats[key].push(data);
+
+        if (currentChatTarget === key) {
+          appendMessageUI(data.senderId, data.message, data.senderId === myId ? 'outgoing' : 'incoming');
+        }
         showNotification(data.senderId, data.message);
+      });
+
+      socket.on('group_created', (data) => {
+        alert(`"${data.groupName}" grubuna eklendiniz!`);
+        addFriendItem(data.groupId, data.groupName, true);
       });
 
       socket.on('incoming_call', async (data) => {
         incomingCallerSocketId = data.from;
-        targetId = data.callerId;
-        document.getElementById('target-user-input').value = targetId;
+        currentChatTarget = data.callerId;
+        isCurrentGroup = false;
 
         if (confirm(`${data.callerId} sizi arıyor. Kabul ediyor musunuz?`)) {
           await setupWebRTC(data.isAudioOnly);
@@ -120,102 +251,169 @@
       });
 
       socket.on('ice_candidate', async (data) => {
-        if (peerConnection) {
-          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-        }
+        if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
       });
     }
 
-    // Kamera, Mikrofon, Galeri ve Dosya Erişim İzin Akışı
-    async function requestAllPermissions() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, 
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+    function switchTab(tabName) {
+      ['friends-list', 'tab-add', 'tab-group', 'tab-settings'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      if (tabName === 'chats') document.getElementById('friends-list').classList.remove('hidden');
+      if (tabName === 'add') document.getElementById('tab-add').classList.remove('hidden');
+      if (tabName === 'group') document.getElementById('tab-group').classList.remove('hidden');
+      if (tabName === 'settings') document.getElementById('tab-settings').classList.remove('hidden');
+    }
+
+    function addFriend() {
+      const friendId = document.getElementById('new-friend-id').value.trim();
+      if (!friendId || friendId === myId) return alert("Geçerli bir kullanıcı adı girin!");
+      addFriendItem(friendId, friendId, false);
+      document.getElementById('new-friend-id').value = "";
+      switchTab('chats');
+    }
+
+    function addFriendItem(id, name, isGroup) {
+      const list = document.getElementById('friends-list');
+      if (list.querySelector(`[data-id="${id}"]`)) return;
+
+      const div = document.createElement('div');
+      div.className = "p-2.5 hover:bg-gray-755 rounded-lg cursor-pointer flex items-center space-x-2 text-xs border-b border-gray-750";
+      div.setAttribute('data-id', id);
+      div.innerHTML = `<div class="w-7 h-7 rounded-full bg-emerald-700 flex items-center justify-center font-bold">${name[0].toUpperCase()}</div><span>${name} ${isGroup ? '(Grup)' : ''}</span>`;
+      div.onclick = () => openChat(id, name, isGroup);
+      list.appendChild(div);
+    }
+
+    function openChat(targetId, targetName, groupFlag) {
+      currentChatTarget = targetId;
+      isCurrentGroup = groupFlag;
+      document.getElementById('active-chat-title').innerText = targetName;
+      
+      const container = document.getElementById('messages-container');
+      container.innerHTML = "";
+      if (chats[targetId]) {
+        chats[targetId].forEach(msg => {
+          appendMessageUI(msg.senderId, msg.message, msg.senderId === myId ? 'outgoing' : 'incoming');
         });
-        stream.getTracks().forEach(track => track.stop());
-        await Notification.requestPermission();
-      } catch (err) {
-        console.warn("İzinler kısıtlandı:", err);
       }
     }
 
-    async function registerServiceWorker() {
-      if ('serviceWorker' in navigator) {
-        try { await navigator.serviceWorker.register('/sw.js'); } catch (e) {}
-      }
+    function createGroup() {
+      const groupName = document.getElementById('group-name-input').value.trim();
+      const membersText = document.getElementById('group-members-input').value.trim();
+      if (!groupName || !membersText) return alert("Grup adı ve üyeleri girin!");
+
+      const members = membersText.split(',').map(m => m.trim());
+      members.push(myId);
+
+      socket.emit('create_group', { groupName, members });
+      alert("Grup oluşturuldu!");
+      switchTab('chats');
     }
 
-    function showNotification(title, body) {
-      if (Notification.permission === 'granted') {
-        navigator.serviceWorker.ready.then(reg => {
-          reg.showNotification(`SHNAPP - ${title}`, { body, icon: '/icon.png' });
-        });
-      }
+    function updateProfilePic(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64 = e.target.result;
+        document.getElementById('my-profile-img').src = base64;
+        socket.emit('update_profile_pic', { userId: myId, profilePic: base64 });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function toggleChatSettings() {
+      const box = document.getElementById('chat-settings-box');
+      box.classList.toggle('hidden');
+    }
+
+    function clearChat() {
+      if (chats[currentChatTarget]) chats[currentChatTarget] = [];
+      document.getElementById('messages-container').innerHTML = "";
+      toggleChatSettings();
+    }
+
+    function blockUser() {
+      alert("Kişi engellendi.");
+      toggleChatSettings();
+    }
+
+    function leaveGroup() {
+      alert("Gruptan ayrıldınız.");
+      toggleChatSettings();
     }
 
     function sendMessage() {
-      targetId = document.getElementById('target-user-input').value.trim();
       const text = document.getElementById('message-input').value.trim();
-      if (!targetId || !text) return alert("Alıcı ve mesaj giriniz!");
+      if (!currentChatTarget || !text) return alert("Sohbet seçin ve mesaj yazın!");
 
-      socket.emit('send_message', { senderId: myId, receiverId: targetId, message: text });
-      appendMessage('Siz', text, 'outgoing');
+      const data = { senderId: myId, receiverId: currentChatTarget, message: text, isGroup: isCurrentGroup };
+      socket.emit('send_message', data);
+
+      if (!chats[currentChatTarget]) chats[currentChatTarget] = [];
+      chats[currentChatTarget].push(data);
+      appendMessageUI(myId, text, 'outgoing');
       document.getElementById('message-input').value = "";
     }
 
     function handleFileSelect(event) {
       const file = event.target.files[0];
-      if (!file) return;
-      targetId = document.getElementById('target-user-input').value.trim();
-      if (!targetId) return alert("Önce dosya atılacak kullanıcı ID'sini girin!");
-
-      const fileMsg = `[Dosya Paylaşıldı: ${file.name}]`;
-      socket.emit('send_message', { senderId: myId, receiverId: targetId, message: fileMsg });
-      appendMessage('Siz', fileMsg, 'outgoing');
+      if (!file || !currentChatTarget) return;
+      const fileMsg = `[Dosya: ${file.name}]`;
+      const data = { senderId: myId, receiverId: currentChatTarget, message: fileMsg, isGroup: isCurrentGroup };
+      socket.emit('send_message', data);
+      if (!chats[currentChatTarget]) chats[currentChatTarget] = [];
+      chats[currentChatTarget].push(data);
+      appendMessageUI(myId, fileMsg, 'outgoing');
     }
 
-    function appendMessage(sender, text, type) {
+    function appendMessageUI(sender, text, type) {
       const container = document.getElementById('messages-container');
       const div = document.createElement('div');
-      div.className = `p-3 rounded-xl max-w-sm text-sm shadow ${type === 'outgoing' ? 'ml-auto bg-emerald-700 text-white' : 'mr-auto bg-gray-800 text-gray-200 border border-gray-700'}`;
-      div.innerHTML = `<span class="text-xs font-bold block text-emerald-300 mb-1">${sender}</span>${text}`;
+      div.className = `p-2.5 rounded-xl max-w-xs text-xs shadow ${type === 'outgoing' ? 'ml-auto bg-emerald-700 text-white' : 'mr-auto bg-gray-800 text-gray-200 border border-gray-700'}`;
+      div.innerHTML = `<span class="font-bold block text-emerald-300 mb-0.5">${sender}</span>${text}`;
       container.appendChild(div);
       container.scrollTop = container.scrollHeight;
     }
 
+    async function requestAllPermissions() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        stream.getTracks().forEach(t => t.stop());
+        await Notification.requestPermission();
+      } catch (e) {}
+    }
+
+    async function registerServiceWorker() {
+      if ('serviceWorker' in navigator) { try { await navigator.serviceWorker.register('/sw.js'); } catch (e) {} }
+    }
+
+    function showNotification(title, body) {
+      if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(reg => reg.showNotification(`SHNAPP - ${title}`, { body, icon: '/icon.png' }));
+      }
+    }
+
     async function setupWebRTC(isAudioOnly) {
-      localStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        video: isAudioOnly ? false : { width: { ideal: 1280 }, height: { ideal: 720 } }
-      });
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: !isAudioOnly });
       document.getElementById('localVideo').srcObject = localStream;
-
       peerConnection = new RTCPeerConnection(rtcConfig);
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-      peerConnection.ontrack = (event) => {
-        document.getElementById('remoteVideo').srcObject = event.streams[0];
-      };
-
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          const recipientSocket = incomingCallerSocketId || targetId;
-          socket.emit('ice_candidate', { to: recipientSocket, candidate: event.candidate });
-        }
+      localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+      peerConnection.ontrack = e => document.getElementById('remoteVideo').srcObject = e.streams[0];
+      peerConnection.onicecandidate = e => {
+        if (e.candidate && incomingCallerSocketId) socket.emit('ice_candidate', { to: incomingCallerSocketId, candidate: e.candidate });
       };
     }
 
     async function startCall(isAudioOnly) {
-      targetId = document.getElementById('target-user-input').value.trim();
-      if (!targetId) return alert("Arama yapmak için kullanıcı ID'si girin!");
-
+      if (!currentChatTarget || isCurrentGroup) return alert("Arama yapmak için birebir bir sohbet seçin!");
       await setupWebRTC(isAudioOnly);
       document.getElementById('call-box').classList.remove('hidden');
-
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
-      socket.emit('call_user', { to: targetId, offer, callerId: myId, isAudioOnly });
+      socket.emit('call_user', { to: currentChatTarget, offer, callerId: myId, isAudioOnly });
     }
 
     function endCall() {
