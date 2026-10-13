@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHNAPP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col overflow-hidden">
+
+  <!-- Giriş Ekranı -->
+  <div id="login-screen" class="flex items-center justify-center h-full">
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-96 text-center border border-gray-700">
+      <h1 class="text-3xl font-bold mb-2 text-emerald-400">SHNAPP</h1>
+      <p class="text-xs text-gray-400 mb-6">WhatsApp Klonu</p>
+      <input type="text" id="username-input" placeholder="Kullanıcı Adınız (Örn: ahmet)" class="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 focus:outline-none focus:border-emerald-500 mb-4 text-white text-sm">
+      <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-semibold transition shadow-lg shadow-emerald-900/50 text-sm">Giriş Yap</button>
+    </div>
+  </div>
+
+  <!-- Ana Sohbet Ekranı -->
+  <div id="app-screen" class="hidden flex h-full">
+    <!-- Sol Panel: Sohbet Listesi ve İzinler -->
+    <div class="w-1/3 bg-gray-800 border-r border-gray-700 flex flex-col">
+      <div class="p-4 bg-gray-850 border-b border-gray-700 flex justify-between items-center">
+        <span id="current-user-label" class="font-bold text-emerald-400 text-sm"></span>
+        <button onclick="requestAllPermissions()" class="text-xs bg-emerald-700 hover:bg-emerald-600 px-2.5 py-1.5 rounded-lg transition">İzinleri Ver</button>
+      </div>
+      <div class="p-3 border-b border-gray-700">
+        <input type="text" id="target-user-input" placeholder="Mesaj atılacak kişi ID..." class="w-full px-3 py-2 rounded-lg bg-gray-700 text-sm border border-gray-600 focus:outline-none focus:border-emerald-500">
+      </div>
+      <div id="chat-list" class="flex-1 overflow-y-auto p-4 text-xs text-gray-400 text-center">
+        Aktif sohbet için yukarıdan kullanıcı ID'si girin.
+      </div>
+    </div>
+
+    <!-- Sağ Panel: Mesajlaşma ve Arama Alanı -->
+    <div class="w-2/3 flex flex-col bg-gray-900 relative">
+      <div id="chat-header" class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center shadow-md">
+        <span id="active-chat-title" class="font-semibold text-sm">SHNAPP Sohbet</span>
+        <div class="space-x-2">
+          <button onclick="startCall(true)" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-xs transition font-medium">📞 Sesli Ara</button>
+          <button onclick="startCall(false)" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-xs transition font-medium">📹 Görüntülü Ara</button>
+        </div>
+      </div>
+
+      <!-- WebRTC Arama Ekranı (Video / Ses) -->
+      <div id="call-box" class="hidden absolute top-16 left-0 right-0 bg-gray-950/95 z-50 p-6 flex flex-col items-center border-b border-gray-700 shadow-2xl backdrop-blur">
+        <div class="flex space-x-4 mb-4">
+          <div class="relative"><video id="localVideo" autoplay muted playsinline class="w-36 h-36 bg-black rounded-xl object-cover border border-gray-600"></video><span class="absolute bottom-2 left-2 text-[10px] bg-black/70 px-2 rounded">Siz</span></div>
+          <div class="relative"><video id="remoteVideo" autoplay playsinline class="w-36 h-36 bg-black rounded-xl object-cover border border-emerald-500"></video><span class="absolute bottom-2 left-2 text-[10px] bg-black/70 px-2 rounded">Karşı Taraf</span></div>
+        </div>
+        <button onclick="endCall()" class="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-xl text-xs font-semibold transition">Aramayı Sonlandır</button>
+      </div>
+
+      <!-- Mesajlar Listesi -->
+      <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+
+      <!-- Medya, Dosya ve Mesaj Gönderme Alanı -->
+      <div class="p-3 bg-gray-800 border-t border-gray-700 flex items-center space-x-2">
+        <label class="cursor-pointer bg-gray-700 hover:bg-gray-600 px-3 py-2.5 rounded-xl text-xs text-gray-300 transition" title="Galeri ve Dosya Ekle">
+          📁 <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
+        </label>
+        <input type="text" id="message-input" placeholder="Bir mesaj yazın..." class="flex-1 px-4 py-2.5 rounded-xl bg-gray-700 border border-gray-600 focus:outline-none focus:border-emerald-500 text-sm">
+        <button onclick="sendMessage()" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2.5 rounded-xl font-semibold transition text-sm">Gönder</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let socket;
+    let myId;
+    let targetId = "";
+    let localStream;
+    let peerConnection;
+    let incomingCallerSocketId = null;
+
+    const rtcConfig = {
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }]
+    };
+
+    async function login() {
+      myId = document.getElementById('username-input').value.trim();
+      if (!myId) return alert("Kullanıcı adı giriniz!");
+
+      socket = io();
+      socket.emit('register_user', myId);
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('current-user-label').innerText = `SHNAPP: ${myId}`;
+
+      requestAllPermissions();
+      registerServiceWorker();
+
+      socket.on('receive_message', (data) => {
+        appendMessage(data.senderId, data.message, 'incoming');
+        showNotification(data.senderId, data.message);
+      });
+
+      socket.on('incoming_call', async (data) => {
+        incomingCallerSocketId = data.from;
+        targetId = data.callerId;
+        document.getElementById('target-user-input').value = targetId;
+
+        if (confirm(`${data.callerId} sizi arıyor. Kabul ediyor musunuz?`)) {
+          await setupWebRTC(data.isAudioOnly);
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          socket.emit('make_answer', { to: incomingCallerSocketId, answer });
+          document.getElementById('call-box').classList.remove('hidden');
+        }
+      });
+
+      socket.on('call_answered', async (data) => {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      });
+
+      socket.on('ice_candidate', async (data) => {
+        if (peerConnection) {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      });
+    }
+
+    // Kamera, Mikrofon, Galeri ve Dosya Erişim İzin Akışı
+    async function requestAllPermissions() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+        });
+        stream.getTracks().forEach(track => track.stop());
+        await Notification.requestPermission();
+      } catch (err) {
+        console.warn("İzinler kısıtlandı:", err);
+      }
+    }
+
+    async function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try { await navigator.serviceWorker.register('/sw.js'); } catch (e) {}
+      }
+    }
+
+    function showNotification(title, body) {
+      if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(`SHNAPP - ${title}`, { body, icon: '/icon.png' });
+        });
+      }
+    }
+
+    function sendMessage() {
+      targetId = document.getElementById('target-user-input').value.trim();
+      const text = document.getElementById('message-input').value.trim();
+      if (!targetId || !text) return alert("Alıcı ve mesaj giriniz!");
+
+      socket.emit('send_message', { senderId: myId, receiverId: targetId, message: text });
+      appendMessage('Siz', text, 'outgoing');
+      document.getElementById('message-input').value = "";
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      targetId = document.getElementById('target-user-input').value.trim();
+      if (!targetId) return alert("Önce dosya atılacak kullanıcı ID'sini girin!");
+
+      const fileMsg = `[Dosya Paylaşıldı: ${file.name}]`;
+      socket.emit('send_message', { senderId: myId, receiverId: targetId, message: fileMsg });
+      appendMessage('Siz', fileMsg, 'outgoing');
+    }
+
+    function appendMessage(sender, text, type) {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = `p-3 rounded-xl max-w-sm text-sm shadow ${type === 'outgoing' ? 'ml-auto bg-emerald-700 text-white' : 'mr-auto bg-gray-800 text-gray-200 border border-gray-700'}`;
+      div.innerHTML = `<span class="text-xs font-bold block text-emerald-300 mb-1">${sender}</span>${text}`;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function setupWebRTC(isAudioOnly) {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: isAudioOnly ? false : { width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      document.getElementById('localVideo').srcObject = localStream;
+
+      peerConnection = new RTCPeerConnection(rtcConfig);
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+      peerConnection.ontrack = (event) => {
+        document.getElementById('remoteVideo').srcObject = event.streams[0];
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          const recipientSocket = incomingCallerSocketId || targetId;
+          socket.emit('ice_candidate', { to: recipientSocket, candidate: event.candidate });
+        }
+      };
+    }
+
+    async function startCall(isAudioOnly) {
+      targetId = document.getElementById('target-user-input').value.trim();
+      if (!targetId) return alert("Arama yapmak için kullanıcı ID'si girin!");
+
+      await setupWebRTC(isAudioOnly);
+      document.getElementById('call-box').classList.remove('hidden');
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      socket.emit('call_user', { to: targetId, offer, callerId: myId, isAudioOnly });
+    }
+
+    function endCall() {
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (peerConnection) peerConnection.close();
+      document.getElementById('call-box').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

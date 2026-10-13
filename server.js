@@ -16,11 +16,11 @@ const io = new Server(server, {
 const activeUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log('Bağlantı sağlandı:', socket.id);
+  console.log('Kullanıcı bağlandı:', socket.id);
 
   socket.on('register_user', (userId) => {
     activeUsers.set(userId, socket.id);
-    console.log(`Kullanıcı aktif: ${userId} (${socket.id})`);
+    console.log(`SHNAPP Kullanıcısı aktif: ${userId} (${socket.id})`);
   });
 
   socket.on('send_message', (data) => {
@@ -44,8 +44,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('make_answer', (data) => {
-    const recipientSocketId = data.to; // Socket ID olarak geliyor
-    io.to(recipientSocketId).emit('call_answered', { answer: data.answer });
+    io.to(data.to).emit('call_answered', { answer: data.answer });
   });
 
   socket.on('ice_candidate', (data) => {
@@ -59,7 +58,7 @@ io.on('connection', (socket) => {
         break;
       }
     }
-    console.log('Bağlantı koptu:', socket.id);
+    console.log('Kullanıcı ayrıldı:', socket.id);
   });
 });
 
