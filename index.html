@@ -1,1195 +1,220 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SHNAPP - Messenger</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0b141a">
-    
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22SHNAPP%22%2C%22short_name%22%3A%22SHNAPP%22%2C%22start_url%22%3A%22%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230b141a%22%2C%22theme_color%22%3A%22%2325d366%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22logo.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D'>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        * { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #0b141a; }
-        ::-webkit-scrollbar-thumb { background: #1f2c34; border-radius: 4px; }
-        .glass-panel { background: rgba(17, 27, 33, 0.96); backdrop-filter: blur(16px); }
-        .luxury-shadow { box-shadow: 0 0 40px rgba(37, 211, 102, 0.1); }
-        
-        html, body {
-            height: 100%; width: 100%; overflow: hidden;
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            margin: 0; padding: 0; background-color: #0b141a;
-        }
-        #app-viewport { height: 100%; width: 100%; display: flex; justify-content: center; align-items: center; }
-        ul#messages, #sidebar, #chat-pane { -webkit-overflow-scrolling: touch; transform: translateZ(0); backface-visibility: hidden; }
-        .chat-bg-pattern { background-color: #0b141a; background-image: radial-gradient(#111b21 1px, transparent 1px); background-size: 20px 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHNAPP - WhatsApp Klonu</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="manifest" href="/manifest.json">
 </head>
-<body class="text-gray-100 font-sans select-none">
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col overflow-hidden">
 
-<div id="app-viewport">
-    <div id="pwa-install-banner" class="fixed top-4 left-4 right-4 max-w-md mx-auto bg-emerald-600 text-white p-4 rounded-2xl shadow-2xl z-50 hidden flex justify-between items-center border border-emerald-400">
-        <div class="flex items-center space-x-3">
-            <i data-lucide="smartphone" class="w-6 h-6"></i>
-            <div>
-                <h4 class="font-bold text-xs">SHNAPP'i Ana Ekrana Ekle</h4>
-                <p class="text-[10px] text-emerald-100">Tek dokunuşla mesajlaşmaya başla!</p>
-            </div>
-        </div>
-        <div class="flex space-x-2">
-            <button onclick="installPWA()" class="bg-white text-emerald-700 font-bold px-3 py-1.5 rounded-xl text-xs">Ekle</button>
-            <button onclick="closeInstallBanner()" class="text-emerald-200 px-2 font-bold text-xs">Geç</button>
-        </div>
+  <!-- Giriş Ekranı -->
+  <div id="login-screen" class="flex items-center justify-center h-full">
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-96 text-center border border-gray-700">
+      <h1 class="text-3xl font-bold mb-6 text-emerald-400">SHNAPP</h1>
+      <p class="text-sm text-gray-400 mb-6">WhatsApp Klonu Sohbet Paneli</p>
+      <input type="text" id="username-input" placeholder="Kullanıcı Adınız (Örn: ahmet)" class="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 focus:outline-none focus:border-emerald-500 mb-4 text-white">
+      <button onclick="login()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-semibold transition shadow-lg shadow-emerald-900/50">Sohbete Başla</button>
+    </div>
+  </div>
+
+  <!-- Ana Sohbet Ekranı -->
+  <div id="app-screen" class="hidden flex h-full">
+    <!-- Sol Panel: Kişi ve Sohbet Alanı -->
+    <div class="w-1/3 bg-gray-850 border-r border-gray-700 flex flex-col bg-gray-800">
+      <div class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center">
+        <span id="current-user-label" class="font-bold text-emerald-400"></span>
+        <button onclick="requestAllPermissions()" class="text-xs bg-emerald-700 hover:bg-emerald-600 px-3 py-1.5 rounded-lg transition">İzinleri Ver</button>
+      </div>
+      <div class="p-3 border-b border-gray-700">
+        <input type="text" id="target-user-input" placeholder="Mesaj atılacak kişi ID..." class="w-full px-3 py-2 rounded-lg bg-gray-700 text-sm border border-gray-600 focus:outline-none focus:border-emerald-500">
+      </div>
+      <div id="chat-list" class="flex-1 overflow-y-auto p-2 text-sm text-gray-400 text-center pt-10">
+        Bağlantı kuruldu. Yukarıdan kullanıcı adı yazıp mesajlaşmaya başlayabilirsiniz.
+      </div>
     </div>
 
-    <!-- Giriş & Kayıt -->
-    <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-8 rounded-3xl luxury-shadow" id="auth-container">
-        <div class="text-center mb-6">
-            <div class="w-16 h-16 bg-gradient-to-tr from-emerald-600 to-teal-500 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 mb-3 overflow-hidden">
-                <img src="logo.png" alt="Logo" class="w-full h-full object-cover">
-            </div>
-            <h1 class="text-2xl font-extrabold tracking-wider text-white">SHNAPP</h1>
-            <p class="text-xs text-emerald-400 mt-1 font-medium">Hızlı ve Güvenli Mesajlaşma</p>
+    <!-- Sağ Panel: Mesajlaşma ve Medya Alanı -->
+    <div class="w-2/3 flex flex-col bg-gray-900 relative">
+      <div id="chat-header" class="p-4 bg-gray-800 border-b border-gray-700 flex justify-between items-center shadow-md">
+        <span id="active-chat-title" class="font-semibold">Aktif Sohbet Yok</span>
+        <div class="space-x-2">
+          <button onclick="startCall(true)" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded-lg text-sm transition">📞 Sesli Ara</button>
+          <button onclick="startCall(false)" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-lg text-sm transition">📹 Görüntülü Ara</button>
         </div>
-        
-        <div class="flex mb-6 bg-gray-900/80 p-1 rounded-xl border border-gray-800">
-            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-emerald-600 text-white transition shadow">Giriş</button>
-            <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition">Kayıt</button>
-        </div>
+      </div>
 
-        <div id="login-form" class="space-y-4">
-            <input type="text" id="login-username" placeholder="Kullanıcı adı" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <input type="password" id="login-password" placeholder="Şifre" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <div class="text-right">
-                <button onclick="openForgotPasswordModal()" class="text-[11px] text-emerald-400 hover:underline">Şifremi Unuttum?</button>
-            </div>
-            <button onclick="login()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider flex justify-center items-center gap-2">
-                <span>Giriş Yap</span>
-                <i data-lucide="arrow-right" class="w-4 h-4"></i>
-            </button>
+      <!-- WebRTC Arama Ekranı (Gizli Başlar) -->
+      <div id="call-box" class="hidden absolute top-16 left-0 right-0 bg-gray-950/95 z-50 p-6 flex flex-col items-center border-b border-gray-700 shadow-2xl backdrop-blur">
+        <div class="flex space-x-4 mb-4">
+          <div class="relative"><video id="localVideo" autoplay muted playsinline class="w-40 h-40 bg-black rounded-xl object-cover border border-gray-600"></video><span class="absolute bottom-2 left-2 text-xs bg-black/60 px-2 rounded">Siz</span></div>
+          <div class="relative"><video id="remoteVideo" autoplay playsinline class="w-40 h-40 bg-black rounded-xl object-cover border border-emerald-500"></video><span class="absolute bottom-2 left-2 text-xs bg-black/60 px-2 rounded">Karşı Taraf</span></div>
         </div>
+        <button onclick="endCall()" class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded-xl text-sm font-semibold transition">Aramayı Sonlandır</button>
+      </div>
 
-        <div id="register-form" class="space-y-3 hidden">
-            <input type="text" id="reg-username" placeholder="Kullanıcı adı seç" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <input type="email" id="reg-email" placeholder="E-posta adresi" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <input type="tel" id="reg-phone" placeholder="Telefon No (Örn: 0555...)" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <input type="password" id="reg-password" placeholder="Şifre belirle" class="w-full px-4 py-3 bg-gray-900/90 border border-gray-800 rounded-xl text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-gray-500">
-            <button onclick="register()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs uppercase tracking-wider">Kayıt Ol</button>
-        </div>
-        <p id="auth-msg" class="mt-4 text-center text-xs text-red-400 font-medium"></p>
+      <!-- Mesajlar Listesi -->
+      <div id="messages-container" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+
+      <!-- Mesaj Yazma Alanı -->
+      <div class="p-3 bg-gray-800 border-t border-gray-700 flex items-center">
+        <input type="text" id="message-input" placeholder="Bir mesaj yazın..." class="flex-1 px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 focus:outline-none focus:border-emerald-500 text-sm">
+        <button onclick="sendMessage()" class="ml-2 bg-emerald-600 hover:bg-emerald-500 px-6 py-3 rounded-xl font-semibold transition text-sm">Gönder</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Şifremi Unuttum Modal -->
-    <div id="forgot-password-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4">
-            <div class="flex justify-between items-center">
-                <h3 class="font-bold text-white text-sm">Şifre Sıfırlama</h3>
-                <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div id="forgot-step-1" class="space-y-3">
-                <p class="text-xs text-gray-300">Kullanıcı Adı, E-posta veya Telefonunuzu girin:</p>
-                <input type="text" id="forgot-identity-input" placeholder="E-posta, Telefon veya Kullanıcı Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-                <button onclick="requestResetCode()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Kod Gönder</button>
-            </div>
-            <div id="forgot-step-2" class="space-y-3 hidden">
-                <p class="text-xs text-emerald-400" id="forgot-code-info">Doğrulama kodunuz oluşturuldu.</p>
-                <input type="text" id="forgot-code-input" placeholder="6 Haneli Doğrulama Kodu" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-                <input type="password" id="forgot-new-password" placeholder="Yeni Şifre" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-                <button onclick="submitResetPassword()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Şifreyi Değiştir</button>
-            </div>
-        </div>
-    </div>
+  <script>
+    let socket;
+    let myId;
+    let targetId = "";
+    let localStream;
+    let peerConnection;
+    let incomingCallerSocketId = null;
+    
+    // Güçlü STUN sunucuları (Görüntü ve ses kopmalarını engeller)
+    const rtcConfig = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    };
 
-    <!-- Sohbet Arayüzü -->
-    <div id="chat-container" class="w-full max-w-5xl h-full md:h-[92vh] glass-panel md:rounded-3xl luxury-shadow border border-emerald-900/30 hidden flex overflow-hidden">
-        
-        <div id="sidebar" class="w-full md:w-80 bg-[#111b21] border-r border-gray-800/80 flex flex-col h-full shrink-0">
-            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-[#202c33]/50">
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="openProfileSettingsModal()">
-                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-emerald-600/20 overflow-hidden shrink-0 border border-emerald-500/30" id="my-profile-avatar-container">
-                        <span id="profile-initial-text">S</span>
-                    </div>
-                    <div class="min-w-0">
-                        <span id="current-username" class="font-bold text-xs text-white block truncate">Kullanıcı</span>
-                        <span class="text-[9px] text-emerald-400 font-semibold tracking-wider flex items-center gap-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Çevrimiçi
-                        </span>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-1">
-                    <button onclick="openSearchModal()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 transition" title="Kişi Ara & Ekle"><i data-lucide="user-plus" class="w-4 h-4"></i></button>
-                    <button onclick="openGroupModal()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 transition" title="Grup Kur"><i data-lucide="users" class="w-4 h-4"></i></button>
-                    <button onclick="openNotificationsModal()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 transition relative" title="Bildirimler">
-                        <i data-lucide="bell" class="w-4 h-4"></i>
-                        <span id="notif-badge" class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full hidden animate-pulse"></span>
-                    </button>
-                    <button onclick="logout()" class="p-2 rounded-full hover:bg-red-950 text-gray-400 hover:text-red-400 transition" title="Çıkış Yap"><i data-lucide="log-out" class="w-4 h-4"></i></button>
-                </div>
-            </div>
+    async function login() {
+      myId = document.getElementById('username-input').value.trim();
+      if (!myId) return alert("Lütfen bir kullanıcı adı girin!");
 
-            <div class="flex-1 overflow-y-auto p-2 space-y-4">
-                <div>
-                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2 mt-1">Sabitlenenler</div>
-                    <div id="pinned-list" class="space-y-1 mb-3"></div>
-                    <div class="text-[10px] font-bold text-emerald-400 px-3 uppercase tracking-widest mb-2">Arkadaşlarım</div>
-                    <div id="friends-list" class="space-y-1"></div>
-                </div>
-                <div>
-                    <div class="text-[10px] font-bold text-teal-400 px-3 uppercase tracking-widest mb-2">Gruplar</div>
-                    <div id="groups-list" class="space-y-1"></div>
-                </div>
-                <div>
-                    <div class="text-[10px] font-bold text-gray-500 px-3 uppercase tracking-widest mb-2">Arşivlenenler</div>
-                    <div id="archived-list" class="space-y-1"></div>
-                </div>
-            </div>
-        </div>
+      socket = io();
+      socket.emit('register_user', myId);
 
-        <div id="chat-pane" class="hidden md:flex flex-1 flex-col justify-between chat-bg-pattern h-full relative overflow-hidden">
-            <div class="px-4 md:px-6 py-3 border-b border-gray-800/80 bg-[#202c33] flex items-center justify-between shrink-0 z-10">
-                <div class="flex items-center space-x-3">
-                    <button onclick="closeChatPane()" class="md:hidden text-emerald-400 font-bold p-1"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
-                    <div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-sm overflow-hidden" id="chat-header-icon">
-                        <i data-lucide="user" class="w-5 h-5"></i>
-                    </div>
-                    <div>
-                        <h3 id="active-room-title" onclick="toggleHeaderMenu()" class="font-bold text-sm text-white flex items-center gap-1.5 cursor-pointer hover:text-emerald-400 transition">Sohbet Seçin</h3>
-                        <span class="text-[11px] text-emerald-400 block -mt-0.5" id="active-room-sub">Sol menüden arkadaşınızı seçin</span>
-                    </div>
-                </div>
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('current-user-label').innerText = `Hesap: ${myId}`;
 
-                <div class="flex items-center space-x-1">
-                    <button onclick="startCall(false)" class="p-2 rounded-full hover:bg-gray-800 text-emerald-400 transition" title="Sesli Arama"><i data-lucide="phone" class="w-4 h-4"></i></button>
-                    <button onclick="startCall(true)" class="p-2 rounded-full hover:bg-gray-800 text-emerald-400 transition" title="Görüntülü Arama"><i data-lucide="video" class="w-4 h-4"></i></button>
-                    <button onclick="toggleInlineSearch()" class="p-2 rounded-full hover:bg-gray-800 text-gray-300 transition" title="Mesaj Ara"><i data-lucide="search" class="w-4 h-4"></i></button>
-                </div>
+      requestAllPermissions();
+      registerServiceWorker();
 
-                <div id="header-dropdown" class="absolute top-16 left-4 md:left-20 w-56 bg-[#202c33] border border-gray-800 rounded-2xl shadow-2xl py-2 z-50 hidden">
-                    <button onclick="openContactInfoModal()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="info" class="w-4 h-4"></i> Kişi Bilgisi</button>
-                    <button onclick="pinCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="pin" class="w-4 h-4"></i> Başa Sabitle</button>
-                    <button onclick="archiveCurrentRoom()" class="w-full text-left px-4 py-2.5 text-xs text-gray-300 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="archive" class="w-4 h-4"></i> Arşivle</button>
-                    <button onclick="clearOrDeleteChat()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-red-950 flex items-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Sohbeti Temizle</button>
-                    <button onclick="openNicknameModal()" class="w-full text-left px-4 py-2.5 text-xs text-emerald-400 hover:bg-gray-800 flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4"></i> Takma Ad Değiştir</button>
-                </div>
-            </div>
+      socket.on('receive_message', (data) => {
+        appendMessage(data.senderId, data.message, 'incoming');
+        showNotification(data.senderId, data.message);
+      });
 
-            <div id="inline-search-bar" class="hidden px-4 py-2 bg-[#111b21] border-b border-gray-800 flex items-center gap-2 shrink-0 z-10">
-                <input type="text" id="chat-search-input" oninput="filterMessages()" placeholder="Mesajlarda ara..." class="flex-1 px-3 py-1.5 bg-[#202c33] border border-gray-700 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-                <button onclick="toggleInlineSearch()" class="text-xs text-gray-400 hover:text-white font-bold p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
+      socket.on('incoming_call', async (data) => {
+        incomingCallerSocketId = data.from;
+        targetId = data.callerId;
+        document.getElementById('target-user-input').value = targetId;
 
-            <ul id="messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 text-sm"></ul>
+        if (confirm(`${data.callerId} sizi arıyor. Kabul ediyor musunuz?`)) {
+          await setupWebRTC(data.isAudioOnly);
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          socket.emit('make_answer', { to: incomingCallerSocketId, answer });
+          document.getElementById('call-box').classList.remove('hidden');
+        }
+      });
 
-            <div id="reply-preview-box" class="hidden px-4 py-2 bg-[#1f2c34] border-t border-gray-800 flex justify-between items-center text-xs shrink-0">
-                <div class="flex items-center space-x-2 truncate">
-                    <i data-lucide="reply" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-                    <div class="truncate">
-                        <span id="reply-to-user" class="font-bold text-emerald-400">Kullanıcı</span>
-                        <p id="reply-to-text" class="text-gray-300 truncate text-[11px]">İçerik...</p>
-                    </div>
-                </div>
-                <button onclick="cancelReply()" class="text-gray-400 hover:text-white p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
+      socket.on('call_answered', async (data) => {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      });
 
-            <form id="chat-form" onsubmit="sendMessage(event)" class="p-2 md:p-3 bg-[#202c33] flex items-center gap-2 shrink-0 z-20 border-t border-gray-800">
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Fotoğraf">
-                    <i data-lucide="camera" class="w-5 h-5"></i>
-                    <input type="file" accept="image/*" onchange="sendMediaFile(event, 'image')" class="hidden">
-                </label>
-                <label class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 cursor-pointer transition shrink-0" title="Belge">
-                    <i data-lucide="paperclip" class="w-5 h-5"></i>
-                    <input type="file" onchange="sendMediaFile(event, 'file')" class="hidden">
-                </label>
-                <button type="button" onclick="sendLocation()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Konum">
-                    <i data-lucide="map-pin" class="w-5 h-5"></i>
-                </button>
-                <button type="button" id="voice-record-btn" onclick="toggleVoiceRecord()" class="p-2.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-emerald-400 transition shrink-0" title="Ses Kaydı">
-                    <i data-lucide="mic" class="w-5 h-5"></i>
-                </button>
-                <input id="m" autocomplete="off" oninput="handleTyping()" placeholder="Mesaj yazın..." class="flex-1 px-4 py-2.5 bg-[#111b21] border border-gray-800 rounded-full text-xs text-white focus:outline-none focus:border-emerald-500 placeholder-gray-500" />
-                <button class="bg-emerald-600 hover:bg-emerald-500 text-white p-2.5 rounded-full transition shadow-lg shadow-emerald-600/30 shrink-0 flex items-center justify-center">
-                    <i data-lucide="send" class="w-4 h-4"></i>
-                </button>
-            </form>
-        </div>
-    </div>
+      socket.on('ice_candidate', async (data) => {
+        if (peerConnection) {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      });
+    }
 
-    <!-- Modaller -->
-    <div id="search-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-sm">Arkadaş Ara & Ekle</h3>
-                <button onclick="closeSearchModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <input type="text" id="modal-search-input" oninput="performSearch()" placeholder="Kullanıcı adı yazın..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mb-4">
-            <div id="modal-search-results" class="space-y-2 max-h-60 overflow-y-auto"></div>
-        </div>
-    </div>
-
-    <div id="notifications-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-sm">Bildirimler & İstekler</h3>
-                <button onclick="closeNotificationsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="mb-4">
-                <h4 class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2">Arkadaşlık İstekleri</h4>
-                <div id="requests-list" class="space-y-2 max-h-32 overflow-y-auto mb-4"></div>
-            </div>
-            <div>
-                <h4 class="text-[11px] font-bold text-teal-400 uppercase tracking-wider mb-2">Bildirim Geçmişi</h4>
-                <div id="notifications-list" class="space-y-2 max-h-40 overflow-y-auto"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="profile-settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-white text-sm">Profil Ayarları</h3>
-                <button onclick="closeProfileSettingsModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="text-center space-y-2">
-                <div class="relative w-24 h-24 mx-auto rounded-full bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center overflow-hidden shadow-xl" id="modal-avatar-preview">
-                    <span id="modal-avatar-initial" class="text-2xl font-bold text-emerald-400">S</span>
-                </div>
-                <label class="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer transition">
-                    <span>Fotoğraf Seç</span>
-                    <input type="file" accept="image/*" onchange="previewAvatar(event)" class="hidden">
-                </label>
-            </div>
-            <div>
-                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Kullanıcı Adı</label>
-                <input type="text" id="settings-username-input" class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-            </div>
-            <div>
-                <label class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider block mb-1">Hakkımda</label>
-                <input type="text" id="settings-bio-input" placeholder="Hakkımda..." class="w-full px-4 py-2.5 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500">
-            </div>
-            <button onclick="saveProfileSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30">Kaydet</button>
-        </div>
-    </div>
-
-    <div id="contact-info-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl text-center space-y-4">
-            <div class="flex justify-between items-center mb-2">
-                <h3 class="font-bold text-white text-sm">Kişi Bilgisi</h3>
-                <button onclick="closeContactInfoModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="w-20 h-20 bg-emerald-600/20 border border-emerald-500/40 rounded-full mx-auto flex items-center justify-center text-emerald-400 font-bold text-2xl overflow-hidden" id="contact-modal-avatar-box">
-                <span id="contact-modal-initial">?</span>
-            </div>
-            <div>
-                <h4 id="contact-modal-username" class="font-bold text-base text-white">Kullanıcı</h4>
-                <p id="contact-modal-status" class="text-xs text-emerald-400 mt-0.5">Çevrim içi</p>
-            </div>
-            <div class="bg-gray-900/80 p-3 rounded-2xl border border-gray-800 text-left">
-                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Hakkımda</span>
-                <p id="contact-modal-bio" class="text-xs text-gray-200">Hey there! I am using SHNAPP.</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="group-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-md glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-sm">Grup Sohbeti Oluştur</h3>
-                <button onclick="closeGroupModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <input type="text" id="group-name-input" placeholder="Grup Adı" class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mb-4">
-            <h4 class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2">Arkadaşlarını Seç</h4>
-            <div id="group-friends-checkboxes" class="space-y-2 max-h-40 overflow-y-auto mb-4 bg-gray-900/60 p-3 rounded-xl border border-gray-800"></div>
-            <button onclick="createGroup()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/30">Grubu Oluştur</button>
-        </div>
-    </div>
-
-    <div id="nickname-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex justify-center items-center z-50 p-4">
-        <div class="w-full max-w-sm glass-panel border border-emerald-900/40 p-6 rounded-3xl shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-white text-sm">Takma Adı Değiştir</h3>
-                <button onclick="closeNicknameModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <input type="text" id="nickname-input" placeholder="Yeni takma ad..." class="w-full px-4 py-3 bg-gray-900 border border-gray-800 rounded-xl text-xs text-white focus:outline-none focus:border-emerald-500 mb-4">
-            <button onclick="saveNickname()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider">Kaydet</button>
-        </div>
-    </div>
-
-    <div id="call-modal" class="fixed inset-0 bg-black/95 backdrop-blur-lg hidden flex flex-col justify-between items-center z-50 p-6">
-        <div class="text-center mt-4">
-            <h3 id="call-status-title" class="text-lg font-bold text-white">Aranıyor...</h3>
-            <p id="call-status-sub" class="text-xs text-emerald-400 mt-1">Bağlantı kuruluyor</p>
-        </div>
-        <div class="relative w-full max-w-2xl h-[60vh] bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 flex items-center justify-center my-auto">
-            <video id="remote-video" autoplay playsinline class="w-full h-full object-cover"></video>
-            <video id="local-video" autoplay playsinline muted class="absolute bottom-4 right-4 w-32 h-44 bg-black/50 rounded-2xl border-2 border-emerald-500 object-cover shadow-2xl"></video>
-        </div>
-        <div class="flex items-center space-x-6 mb-6">
-            <div id="incoming-call-controls" class="hidden flex space-x-4">
-                <button onclick="acceptCall()" class="w-14 h-14 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center"><i data-lucide="phone" class="w-6 h-6"></i></button>
-                <button onclick="rejectCall()" class="w-14 h-14 rounded-full bg-red-600 text-white font-bold flex items-center justify-center"><i data-lucide="phone-off" class="w-6 h-6"></i></button>
-            </div>
-            <button id="end-call-btn" onclick="endCall()" class="w-14 h-14 rounded-full bg-red-600 text-white font-bold flex items-center justify-center"><i data-lucide="phone-off" class="w-6 h-6"></i></button>
-        </div>
-    </div>
-</div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            lucide.createIcons();
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                .then(() => console.log("SW Aktif!"))
-                .catch(err => console.log("SW Hata:", err));
-            }
+    async function requestAllPermissions() {
+      try {
+        // Kamera, Mikrofon ve Tarayıcı Bildirim İzinleri
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, 
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
         });
+        stream.getTracks().forEach(track => track.stop());
+        await Notification.requestPermission();
+      } catch (err) {
+        console.warn("İzinler tam alınamadı veya reddedildi:", err);
+      }
+    }
 
-        document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                if (socket && !socket.connected) socket.connect();
-                if (currentUser) refreshData();
-            }
+    async function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        try { await navigator.serviceWorker.register('/sw.js'); } catch (e) {}
+      }
+    }
+
+    function showNotification(title, body) {
+      if (Notification.permission === 'granted') {
+        navigator.serviceWorker.ready.then(reg => {
+          reg.showNotification(`SHNAPP - ${title}`, { body, icon: '/icon.png' });
         });
+      }
+    }
 
-        // Profesyonel Zil Sese Kaynağı (Cihazın varsayılan zili simülasyonu)
-        const ringtone = new Audio('https://assets.mixkit.co/active_storage/sfx/1359/1359-preview.mp3');
-        ringtone.loop = true;
+    function sendMessage() {
+      targetId = document.getElementById('target-user-input').value.trim();
+      const text = document.getElementById('message-input').value.trim();
+      if (!targetId || !text) return alert("Alıcı ID ve mesaj boş olamaz!");
 
-        let currentUser = localStorage.getItem('shnapp_user') || "";
-        let currentRoom = "";
-        let activeFriendName = "";
-        let socket;
-        let friends = [];
-        let archived = [];
-        let pinned = [];
-        let nicknames = {};
-        let unreadRooms = JSON.parse(localStorage.getItem('shnapp_unread') || "{}");
-        let deferredPrompt = null;
-        let typingTimeout = null;
-        let replyingTo = null;
-        let selectedAvatarBase64 = "";
-        let myBio = "";
-        let myEmail = "";
-        let myPhone = "";
-        let mediaRecorder;
-        let audioChunks = [];
-        let isRecording = false;
-        let peerConnection;
-        let localStream;
-        let incomingCallData = null;
-        const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+      socket.emit('send_message', { senderId: myId, receiverId: targetId, message: text });
+      appendMessage('Siz', text, 'outgoing');
+      document.getElementById('message-input').value = "";
+    }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
+    function appendMessage(sender, text, type) {
+      const container = document.getElementById('messages-container');
+      const div = document.createElement('div');
+      div.className = `p-3 rounded-xl max-w-sm text-sm shadow ${type === 'outgoing' ? 'ml-auto bg-emerald-700 text-white' : 'mr-auto bg-gray-800 text-gray-200 border border-gray-700'}`;
+      div.innerHTML = `<span class="text-xs font-bold block text-emerald-300 mb-1">${sender}</span>${text}`;
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
 
-        async function startPermissionsSequence() {
-            if (deferredPrompt) {
-                document.getElementById('pwa-install-banner').classList.remove('hidden');
-            } else {
-                if ("Notification" in window && Notification.permission === "default") {
-                    try { await Notification.requestPermission(); } catch(e) {}
-                }
-            }
+    async function setupWebRTC(isAudioOnly) {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        video: isAudioOnly ? false : { width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      document.getElementById('localVideo').srcObject = localStream;
+
+      peerConnection = new RTCPeerConnection(rtcConfig);
+      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+      peerConnection.ontrack = (event) => {
+        document.getElementById('remoteVideo').srcObject = event.streams[0];
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          const recipientSocket = incomingCallerSocketId || targetId;
+          socket.emit('ice_candidate', { to: recipientSocket, candidate: event.candidate });
         }
-
-        window.onload = () => {
-            if (currentUser) initApp(currentUser);
-        };
-
-        function switchTab(tab) {
-            const loginForm = document.getElementById('login-form');
-            const regForm = document.getElementById('register-form');
-            const tabLogin = document.getElementById('tab-login');
-            const tabReg = document.getElementById('tab-register');
-            if (tab === 'login') {
-                loginForm.classList.remove('hidden'); regForm.classList.add('hidden');
-                tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-emerald-600 text-white transition shadow";
-                tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
-            } else {
-                regForm.classList.remove('hidden'); loginForm.classList.add('hidden');
-                tabReg.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg bg-emerald-600 text-white transition shadow";
-                tabLogin.className = "flex-1 py-2 font-bold text-xs uppercase tracking-wider rounded-lg text-gray-400 transition";
-            }
-            document.getElementById('auth-msg').innerText = "";
-        }
-
-        async function register() {
-            const username = document.getElementById('reg-username').value;
-            const password = document.getElementById('reg-password').value;
-            const email = document.getElementById('reg-email').value;
-            const phone = document.getElementById('reg-phone').value;
-            const msgEl = document.getElementById('auth-msg');
-
-            const res = await fetch('/api/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, email, phone })
-            });
-            const data = await res.json();
-            if (data.success) {
-                msgEl.className = "mt-4 text-center text-xs text-emerald-400 font-medium";
-                msgEl.innerText = "Kayıt başarılı! Giriş yapabilirsiniz.";
-                switchTab('login');
-            } else {
-                msgEl.innerText = data.message;
-            }
-        }
-
-        async function login() {
-            const username = document.getElementById('login-username').value;
-            const password = document.getElementById('login-password').value;
-            const msgEl = document.getElementById('auth-msg');
-
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                currentUser = data.username;
-                localStorage.setItem('shnapp_user', currentUser);
-                initApp(currentUser);
-            } else {
-                msgEl.innerText = data.message;
-            }
-        }
-
-        function openForgotPasswordModal() {
-            document.getElementById('forgot-password-modal').classList.remove('hidden');
-            document.getElementById('forgot-step-1').classList.remove('hidden');
-            document.getElementById('forgot-step-2').classList.add('hidden');
-        }
-        function closeForgotPasswordModal() { document.getElementById('forgot-password-modal').classList.add('hidden'); }
-
-        async function requestResetCode() {
-            const identity = document.getElementById('forgot-identity-input').value.trim();
-            if(!identity) return alert("Bilginizi girin!");
-
-            const res = await fetch('/api/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ identity })
-            });
-            const data = await res.json();
-            if(data.success) {
-                document.getElementById('forgot-step-1').classList.add('hidden');
-                document.getElementById('forgot-step-2').classList.remove('hidden');
-                document.getElementById('forgot-code-info').innerText = data.message;
-                window.resetTargetUser = data.username;
-            } else alert(data.message);
-        }
-
-        async function submitResetPassword() {
-            const code = document.getElementById('forgot-code-input').value.trim();
-            const newPassword = document.getElementById('forgot-new-password').value.trim();
-            if(!code || !newPassword) return alert("Boş bırakmayın!");
-
-            const res = await fetch('/api/reset-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: window.resetTargetUser, code, newPassword })
-            });
-            const data = await res.json();
-            if(data.success) {
-                alert(data.message); closeForgotPasswordModal();
-            } else alert(data.message);
-        }
-
-        function initApp(username) {
-            document.getElementById('auth-container').classList.add('hidden');
-            document.getElementById('chat-container').classList.remove('hidden');
-            document.getElementById('current-username').innerText = username;
-            
-            socket = io({ transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: Infinity });
-            socket.emit('register user', username);
-
-            socket.on('chat message', function(data) {
-                if (data.room === currentRoom) {
-                    appendMessage(data);
-                } else {
-                    unreadRooms[data.room] = true;
-                    localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
-                    renderMainLists();
-                }
-            });
-
-            socket.on('trigger unread', function(data) {
-                if (data.room !== currentRoom) {
-                    unreadRooms[data.room] = true;
-                    localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
-                    renderMainLists();
-
-                    if (Notification.permission === "granted") {
-                        new Notification(`SHNAPP: @${data.sender}`, {
-                            body: data.payload.type === 'text' ? data.payload.content : "Yeni medya mesajı!",
-                            icon: "/logo.png"
-                        });
-                    }
-                }
-            });
-
-            socket.on('message deleted', function(data) {
-                const el = document.getElementById(data.msgId);
-                if (el) el.remove();
-            });
-
-            socket.on('load history', function(history) {
-                const msgList = document.getElementById('messages');
-                msgList.innerHTML = "";
-                history.forEach(data => appendMessage(data));
-            });
-
-            socket.on('user typing', function(data) {
-                if (data.room === currentRoom && data.username !== currentUser) {
-                    document.getElementById('active-room-sub').innerText = "yazıyor...";
-                    document.getElementById('active-room-sub').classList.add("text-emerald-400", "animate-pulse");
-                }
-            });
-
-            socket.on('user stop typing', function(data) {
-                if (data.room === currentRoom && data.username !== currentUser) {
-                    document.getElementById('active-room-sub').classList.remove("animate-pulse");
-                    if (activeFriendName) {
-                        fetch(`/api/profile-info?user=${activeFriendName}`).then(res => res.json()).then(d => {
-                            document.getElementById('active-room-sub').innerText = d.lastSeen || 'Çevrimdışı';
-                        });
-                    }
-                }
-            });
-
-            socket.on('user status change', function(data) {
-                if (data.username === activeFriendName) {
-                    document.getElementById('active-room-sub').innerText = data.status;
-                }
-            });
-
-            socket.on('new notification', function() {
-                document.getElementById('notif-badge').classList.remove('hidden');
-                refreshData();
-            });
-
-            socket.on('refresh data', function() {
-                refreshData();
-            });
-
-            // Profesyonel Arama ve Zil Sesi Dinleyicisi
-            socket.on('incoming-call', async (data) => {
-                incomingCallData = data;
-                try {
-                    ringtone.currentTime = 0;
-                    await ringtone.play();
-                } catch(e) {}
-
-                document.getElementById('call-modal').classList.remove('hidden');
-                document.getElementById('incoming-call-controls').classList.remove('hidden');
-                document.getElementById('end-call-btn').classList.add('hidden');
-                document.getElementById('call-status-title').innerText = `@${data.from} sizi arıyor...`;
-                document.getElementById('call-status-sub').innerText = data.isVideo ? "Görüntülü Arama" : "Sesli Arama";
-            });
-
-            socket.on('call-answered', async (data) => {
-                ringtone.pause();
-                document.getElementById('call-status-title').innerText = `@${activeFriendName} ile görüşülüyor`;
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-            });
-
-            socket.on('ice-candidate', async (data) => {
-                if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-            });
-
-            socket.on('call-ended', () => closeCallModal());
-
-            refreshData();
-            setTimeout(() => startPermissionsSequence(), 800);
-
-            // Mobilde ilk açılışta doğrudan Arkadaş Listesini göster
-            if (window.innerWidth < 768) {
-                document.getElementById('chat-pane').classList.add('hidden');
-                document.getElementById('sidebar').classList.remove('hidden');
-            }
-        }
-
-        async function refreshData() {
-            try {
-                const res = await fetch(`/api/profile-info?user=${currentUser}`);
-                const data = await res.json();
-                if (data.success) {
-                    friends = data.friends || [];
-                    pinned = data.pinnedRooms || [];
-                    nicknames = data.nicknames || {};
-                    myBio = data.bio;
-                    myEmail = data.email;
-                    myPhone = data.phone;
-                    selectedAvatarBase64 = data.avatar;
-
-                    const avatarBox = document.getElementById('my-profile-avatar-container');
-                    if(data.avatar) avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
-                    else avatarBox.innerHTML = `<span class="text-sm font-bold">${currentUser.charAt(0).toUpperCase()}</span>`;
-
-                    const archRes = await fetch(`/api/archived?user=${currentUser}`);
-                    archived = await archRes.json();
-
-                    renderMainLists();
-                    renderNotifications(data.requests, data.notifications);
-                }
-            } catch(e) {}
-        }
-
-        function openProfileSettingsModal() {
-            document.getElementById('profile-settings-modal').classList.remove('hidden');
-            document.getElementById('settings-username-input').value = currentUser;
-            document.getElementById('settings-bio-input').value = myBio;
-            const preview = document.getElementById('modal-avatar-preview');
-            if(selectedAvatarBase64) preview.innerHTML = `<img src="${selectedAvatarBase64}" class="w-full h-full object-cover">`;
-            else preview.innerHTML = `<span class="text-2xl font-bold text-emerald-400">${currentUser.charAt(0).toUpperCase()}</span>`;
-        }
-        function closeProfileSettingsModal() { document.getElementById('profile-settings-modal').classList.add('hidden'); }
-
-        function previewAvatar(e) {
-            const file = e.target.files[0];
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    selectedAvatarBase64 = evt.target.result;
-                    document.getElementById('modal-avatar-preview').innerHTML = `<img src="${selectedAvatarBase64}" class="w-full h-full object-cover">`;
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        async function saveProfileSettings() {
-            const newUsername = document.getElementById('settings-username-input').value.trim();
-            const bio = document.getElementById('settings-bio-input').value.trim();
-
-            const res = await fetch('/api/update-profile-settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, newUsername, bio, avatar: selectedAvatarBase64 })
-            });
-            const data = await res.json();
-            if (data.success) {
-                currentUser = data.username;
-                localStorage.setItem('shnapp_user', currentUser);
-                document.getElementById('current-username').innerText = currentUser;
-                closeProfileSettingsModal();
-                refreshData();
-            } else alert(data.message || "Hata oluştu!");
-        }
-
-        async function openContactInfoModal() {
-            toggleHeaderMenu();
-            if (!activeFriendName) return;
-
-            const res = await fetch(`/api/profile-info?user=${activeFriendName}`);
-            const data = await res.json();
-            if (data.success) {
-                const avatarBox = document.getElementById('contact-modal-avatar-box');
-                if(data.avatar) avatarBox.innerHTML = `<img src="${data.avatar}" class="w-full h-full object-cover">`;
-                else avatarBox.innerHTML = `<span class="text-xl font-bold text-emerald-400">${activeFriendName.charAt(0).toUpperCase()}</span>`;
-                document.getElementById('contact-modal-username').innerText = `@${activeFriendName}`;
-                document.getElementById('contact-modal-status').innerText = data.lastSeen || 'Çevrim dışı';
-                document.getElementById('contact-modal-bio').innerText = data.bio;
-                document.getElementById('contact-info-modal').classList.remove('hidden');
-            }
-        }
-        function closeContactInfoModal() { document.getElementById('contact-info-modal').classList.add('hidden'); }
-
-        async function renderMainLists() {
-            const friendsEl = document.getElementById('friends-list');
-            const pinnedEl = document.getElementById('pinned-list');
-            const groupsEl = document.getElementById('groups-list');
-            const archEl = document.getElementById('archived-list');
-            friendsEl.innerHTML = ""; pinnedEl.innerHTML = ""; groupsEl.innerHTML = ""; archEl.innerHTML = "";
-
-            friends.forEach(f => {
-                const roomName = [currentUser, f].sort().join('_');
-                const isPinned = pinned.includes(roomName);
-                const isArchived = archived.includes(roomName);
-                const hasUnread = unreadRooms[roomName];
-                const displayName = nicknames[f] || f;
-                const item = createListItem(displayName, 'Mesaj Gönder', roomName, 'user', hasUnread, f);
-                
-                if (isPinned && !isArchived) pinnedEl.appendChild(item);
-                else if (isArchived) archEl.appendChild(item);
-                else friendsEl.appendChild(item);
-            });
-
-            try {
-                const groupRes = await fetch(`/api/user-groups?user=${currentUser}`);
-                const groups = await groupRes.json();
-                groups.forEach(g => {
-                    const isPinned = pinned.includes(g.id);
-                    const isArchived = archived.includes(g.id);
-                    const hasUnread = unreadRooms[g.id];
-                    const item = createListItem(g.name, 'Grup Sohbeti', g.id, 'users', hasUnread, null);
-                    if (isPinned && !isArchived) pinnedEl.appendChild(item);
-                    else if (isArchived) archEl.appendChild(item);
-                    else groupsEl.appendChild(item);
-                });
-            } catch(e) {}
-            
-            lucide.createIcons();
-        }
-
-        function createListItem(name, sub, roomName, icon, hasUnread, rawName) {
-            const div = document.createElement('div');
-            div.className = "p-3 rounded-2xl cursor-pointer hover:bg-[#202c33] text-white flex items-center justify-between transition border border-transparent";
-            div.innerHTML = `
-                <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-10 h-10 rounded-full bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center font-bold text-xs text-emerald-400 shrink-0">
-                        <i data-lucide="${icon}" class="w-5 h-5"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <h4 class="text-xs font-bold truncate text-gray-200">${name}</h4>
-                        <p class="text-[10px] text-gray-400 truncate">${sub}</p>
-                    </div>
-                </div>
-                ${hasUnread ? '<span class="w-2.5 h-2.5 bg-emerald-500 rounded-full shrink-0 shadow-lg shadow-emerald-500/50 animate-pulse"></span>' : ''}
-            `;
-            div.onclick = () => selectRoom(roomName, name, rawName);
-            return div;
-        }
-
-        async function selectRoom(room, name, rawName) {
-            currentRoom = room;
-            activeFriendName = rawName;
-            
-            unreadRooms[room] = false;
-            localStorage.setItem('shnapp_unread', JSON.stringify(unreadRooms));
-            
-            document.getElementById('active-room-title').innerText = name;
-            document.getElementById('messages').innerHTML = "";
-            document.getElementById('chat-pane').classList.remove('hidden');
-
-            if (rawName) {
-                const res = await fetch(`/api/profile-info?user=${rawName}`);
-                const data = await res.json();
-                document.getElementById('active-room-sub').innerText = data.lastSeen || 'Çevrimdışı';
-            } else {
-                document.getElementById('active-room-sub').innerText = 'Grup Odası';
-            }
-
-            if(window.innerWidth < 768) {
-                document.getElementById('sidebar').classList.add('hidden');
-            }
-
-            socket.emit('join room', room);
-            renderMainLists();
-        }
-
-        function closeChatPane() {
-            document.getElementById('chat-pane').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('hidden');
-            currentRoom = ""; activeFriendName = "";
-            document.getElementById('header-dropdown').classList.add('hidden');
-        }
-
-        function handleTyping() {
-            if (!currentRoom) return;
-            socket.emit('typing', { room: currentRoom, username: currentUser });
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => {
-                socket.emit('stop typing', { room: currentRoom, username: currentUser });
-            }, 1500);
-        }
-
-        function toggleHeaderMenu() {
-            if (!activeFriendName && !currentRoom) return;
-            document.getElementById('header-dropdown').classList.toggle('hidden');
-        }
-
-        function toggleInlineSearch() {
-            const bar = document.getElementById('inline-search-bar');
-            bar.classList.toggle('hidden');
-            if (bar.classList.contains('hidden')) {
-                document.getElementById('chat-search-input').value = "";
-                filterMessages();
-            }
-        }
-
-        function filterMessages() {
-            const query = document.getElementById('chat-search-input').value.toLowerCase();
-            const items = document.querySelectorAll('#messages li');
-            items.forEach(item => {
-                item.style.display = item.innerText.toLowerCase().includes(query) ? "flex" : "none";
-            });
-        }
-
-        async function pinCurrentRoom() {
-            if (!currentRoom) return;
-            await fetch('/api/pin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, roomId: currentRoom })
-            });
-            toggleHeaderMenu(); refreshData();
-        }
-
-        async function archiveCurrentRoom() {
-            if (!currentRoom) return;
-            await fetch('/api/archive', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, roomId: currentRoom })
-            });
-            toggleHeaderMenu(); refreshData(); closeChatPane();
-        }
-
-        function clearOrDeleteChat() {
-            if (currentRoom) {
-                document.getElementById('messages').innerHTML = "";
-                socket.emit('clear-chat', currentRoom);
-            }
-            toggleHeaderMenu();
-        }
-
-        function openNicknameModal() {
-            toggleHeaderMenu();
-            document.getElementById('nickname-modal').classList.remove('hidden');
-            document.getElementById('nickname-input').value = nicknames[activeFriendName] || "";
-        }
-        function closeNicknameModal() { document.getElementById('nickname-modal').classList.add('hidden'); }
-
-        async function saveNickname() {
-            const nickname = document.getElementById('nickname-input').value.trim();
-            const res = await fetch('/api/set-nickname', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser: activeFriendName, nickname })
-            });
-            const data = await res.json();
-            if (data.success) {
-                closeNicknameModal(); refreshData();
-                document.getElementById('active-room-title').innerText = nickname || activeFriendName;
-            }
-        }
-
-        function sendMediaFile(event, type) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    sendCustomMessage({ type: type, url: e.target.result, fileName: file.name });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function sendLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    sendCustomMessage({ type: 'location', url: `https://maps.google.com/?q=${lat},${lon}`, text: '📍 Anlık Konum' });
-                }, () => alert("Konum alınamadı!"));
-            }
-        }
-
-        async function toggleVoiceRecord() {
-            const micBtn = document.getElementById('voice-record-btn');
-            if (!isRecording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = async () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader();
-                        reader.readAsDataURL(audioBlob);
-                        reader.onloadend = () => sendCustomMessage({ type: 'audio', url: reader.result });
-                    };
-                    mediaRecorder.start();
-                    isRecording = true;
-                    micBtn.classList.add('text-red-500', 'animate-pulse');
-                } catch (err) { alert("Mikrofon izni gerekli!"); }
-            } else {
-                mediaRecorder.stop();
-                isRecording = false;
-                micBtn.classList.remove('text-red-500', 'animate-pulse');
-            }
-        }
-
-        function sendMessage(e) {
-            e.preventDefault();
-            const input = document.getElementById('m');
-            const text = input.value.trim();
-            if (text && currentRoom) {
-                sendCustomMessage({ type: 'text', content: text });
-                input.value = '';
-                cancelReply();
-                socket.emit('stop typing', { room: currentRoom, username: currentUser });
-            }
-        }
-
-        function sendCustomMessage(msgPayload) {
-            if (currentRoom) {
-                const messageData = {
-                    room: currentRoom,
-                    sender: currentUser,
-                    payload: msgPayload,
-                    replyTo: replyingTo ? { sender: replyingTo.sender, text: replyingTo.text } : null,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                };
-                socket.emit('chat message', messageData);
-                cancelReply();
-            }
-        }
-
-        function setReplyTo(id, sender, text) {
-            replyingTo = { id, sender, text };
-            document.getElementById('reply-preview-box').classList.remove('hidden');
-            document.getElementById('reply-to-user').innerText = `@${sender}`;
-            document.getElementById('reply-to-text').innerText = text;
-        }
-
-        function cancelReply() {
-            replyingTo = null;
-            document.getElementById('reply-preview-box').classList.add('hidden');
-        }
-
-        function deleteMessage(msgId) {
-            if (confirm("Mesaj silinsin mi?")) {
-                socket.emit('delete message', { room: currentRoom, msgId });
-            }
-        }
-
-        function appendMessage(data) {
-            const item = document.createElement('li');
-            const isMe = data.sender === currentUser;
-            item.id = data.id;
-            item.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'} group`;
-
-            let bodyHtml = "";
-            let rawTextForReply = "";
-
-            if (data.payload.type === 'text') {
-                bodyHtml = `<p class="break-words">${data.payload.content}</p>`;
-                rawTextForReply = data.payload.content;
-            } else if (data.payload.type === 'image') {
-                bodyHtml = `<img src="${data.payload.url}" class="rounded-xl max-w-xs max-h-60 object-cover my-1" />`;
-                rawTextForReply = "[Fotoğraf]";
-            } else if (data.payload.type === 'file') {
-                bodyHtml = `<a href="${data.payload.url}" download="${data.payload.fileName}" class="flex items-center gap-2 bg-black/20 p-2.5 rounded-xl hover:bg-black/30 transition text-white"><i data-lucide="file-text" class="w-6 h-6"></i><span class="underline truncate max-w-[180px] text-xs">${data.payload.fileName || 'Dosya'}</span></a>`;
-                rawTextForReply = "[Dosya]";
-            } else if (data.payload.type === 'location') {
-                bodyHtml = `<a href="${data.payload.url}" target="_blank" class="flex items-center gap-2 bg-emerald-950/60 p-2.5 rounded-xl text-emerald-300 border border-emerald-800/50"><i data-lucide="map-pin" class="w-6 h-6 shrink-0"></i><span class="text-xs font-bold underline">Canlı Konumu Aç</span></a>`;
-                rawTextForReply = "[Konum]";
-            } else if (data.payload.type === 'audio') {
-                bodyHtml = `<audio controls src="${data.payload.url}" class="w-60 h-10 my-1"></audio>`;
-                rawTextForReply = "[Ses Kaydı]";
-            }
-
-            let replyHtml = data.replyTo ? `<div class="bg-black/20 border-l-2 border-emerald-400 pl-2 py-1 mb-1 rounded text-[10px] text-gray-300"><span class="font-bold text-emerald-400">@${data.replyTo.sender}</span><p class="truncate">${data.replyTo.text}</p></div>` : '';
-
-            item.innerHTML = `
-                <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs relative ${isMe ? 'bg-[#005c4b] text-white rounded-tr-none' : 'bg-[#202c33] text-gray-100 rounded-tl-none'} shadow-md">
-                    ${!isMe ? `<span class="block text-[10px] text-emerald-400 font-bold mb-0.5">@${data.sender}</span>` : ''}
-                    ${replyHtml}
-                    ${bodyHtml}
-                    <div class="flex items-center justify-end gap-1 mt-1 text-[9px] text-gray-300">
-                        <span>${data.time || ''}</span>
-                        ${isMe ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-sky-400 inline"></i>' : ''}
-                    </div>
-                    <div class="absolute -top-3 ${isMe ? '-left-16' : '-right-16'} hidden group-hover:flex items-center gap-1 bg-[#111b21] p-1 rounded-lg border border-gray-800 shadow-xl z-10">
-                        <button onclick="setReplyTo('${data.id}', '${data.sender}', '${rawTextForReply.replace(/'/g, "\\'")}')" class="p-1 hover:bg-gray-800 rounded text-emerald-400"><i data-lucide="reply" class="w-3.5 h-3.5"></i></button>
-                        ${isMe ? `<button onclick="deleteMessage('${data.id}')" class="p-1 hover:bg-red-950 rounded text-red-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>` : ''}
-                    </div>
-                </div>
-            `;
-            const msgList = document.getElementById('messages');
-            msgList.appendChild(item);
-            msgList.scrollTop = msgList.scrollHeight;
-            lucide.createIcons();
-        }
-
-        async function startCall(isVideo) {
-            if (!activeFriendName) return alert("Sohbet seçin!");
-            document.getElementById('call-modal').classList.remove('hidden');
-            document.getElementById('incoming-call-controls').classList.add('hidden');
-            document.getElementById('end-call-btn').classList.remove('hidden');
-            document.getElementById('call-status-title').innerText = `@${activeFriendName} aranıyor...`;
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
-                document.getElementById('local-video').srcObject = localStream;
-                createPeerConnection(activeFriendName);
-                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                socket.emit('call-user', { targetUser: activeFriendName, from: currentUser, offer, isVideo });
-            } catch (err) { alert("İzin gerekli!"); closeCallModal(); }
-        }
-
-        function createPeerConnection(targetUser) {
-            peerConnection = new RTCPeerConnection(rtcConfig);
-            peerConnection.onicecandidate = e => { if (e.candidate) socket.emit('ice-candidate', { targetUser, candidate: e.candidate }); };
-            peerConnection.ontrack = e => { document.getElementById('remote-video').srcObject = e.streams[0]; };
-        }
-
-        async function acceptCall() {
-            ringtone.pause();
-            ringtone.currentTime = 0;
-            document.getElementById('incoming-call-controls').classList.add('hidden');
-            document.getElementById('end-call-btn').classList.remove('hidden');
-            document.getElementById('call-status-title').innerText = `@${incomingCallData.from} ile görüşülüyor`;
-
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: incomingCallData.isVideo, audio: true });
-                document.getElementById('local-video').srcObject = localStream;
-                createPeerConnection(incomingCallData.from);
-                localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
-                const answer = await peerConnection.createAnswer();
-                await peerConnection.setLocalDescription(answer);
-
-                socket.emit('answer-call', { targetUser: incomingCallData.from, answer });
-            } catch (err) { endCall(); }
-        }
-
-        function rejectCall() {
-            ringtone.pause();
-            ringtone.currentTime = 0;
-            if (incomingCallData) socket.emit('end-call', { targetUser: incomingCallData.from });
-            closeCallModal();
-        }
-
-        function endCall() {
-            ringtone.pause();
-            ringtone.currentTime = 0;
-            const target = activeFriendName || (incomingCallData ? incomingCallData.from : null);
-            if (target) socket.emit('end-call', { targetUser: target });
-            closeCallModal();
-        }
-
-        function closeCallModal() {
-            ringtone.pause();
-            ringtone.currentTime = 0;
-            if (localStream) localStream.getTracks().forEach(track => track.stop());
-            if (peerConnection) { peerConnection.close(); peerConnection = null; }
-            document.getElementById('call-modal').classList.add('hidden');
-            incomingCallData = null;
-        }
-
-        function openSearchModal() { document.getElementById('search-modal').classList.remove('hidden'); }
-        function closeSearchModal() { document.getElementById('search-modal').classList.add('hidden'); }
-        function openNotificationsModal() {
-            document.getElementById('notifications-modal').classList.remove('hidden');
-            document.getElementById('notif-badge').classList.add('hidden');
-            refreshData();
-        }
-        function closeNotificationsModal() { document.getElementById('notifications-modal').classList.add('hidden'); }
-        
-        function openGroupModal() {
-            document.getElementById('group-modal').classList.remove('hidden');
-            const box = document.getElementById('group-friends-checkboxes');
-            box.innerHTML = "";
-            friends.forEach(f => {
-                box.innerHTML += `<label class="flex items-center space-x-2 text-xs cursor-pointer"><input type="checkbox" value="${f}" class="group-member-checkbox rounded bg-gray-900 border-gray-700 text-emerald-600"><span>@${f}</span></label>`;
-            });
-        }
-        function closeGroupModal() { document.getElementById('group-modal').classList.add('hidden'); }
-
-        async function performSearch() {
-            const query = document.getElementById('modal-search-input').value;
-            const res = await fetch(`/api/search?q=${query}&user=${currentUser}`);
-            const usersList = await res.json();
-            const resultsEl = document.getElementById('modal-search-results');
-            resultsEl.innerHTML = "";
-
-            usersList.forEach(u => {
-                const isFriend = friends.includes(u.username);
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center bg-gray-900/80 px-3 py-2.5 rounded-xl text-xs text-white border border-gray-800";
-                div.innerHTML = `
-                    <span>@${u.username}</span>
-                    <div>
-                        ${!isFriend ? `<button onclick="sendRequest('${u.username}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded-lg text-[10px] font-bold">Arkadaş Ekle</button>` : '<span class="text-emerald-400 font-semibold text-[10px]">Arkadaşsınız</span>'}
-                    </div>
-                `;
-                resultsEl.appendChild(div);
-            });
-        }
-
-        async function sendRequest(targetUser) {
-            const res = await fetch('/api/send-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, targetUser })
-            });
-            const data = await res.json();
-            alert(data.success ? "İstek gönderildi!" : data.message);
-        }
-
-        async function renderNotifications(reqs, notifs) {
-            const reqList = document.getElementById('requests-list');
-            const notifList = document.getElementById('notifications-list');
-            reqList.innerHTML = ""; notifList.innerHTML = "";
-
-            if (reqs.length > 0) document.getElementById('notif-badge').classList.remove('hidden');
-
-            reqs.forEach(req => {
-                reqList.innerHTML += `
-                    <div class="flex justify-between items-center bg-gray-900 px-3 py-2 rounded-xl text-xs text-white">
-                        <span>@${req.from}</span>
-                        <button onclick="acceptRequest('${req.from}')" class="bg-emerald-600 hover:bg-emerald-500 px-3 py-1 rounded-lg text-[10px] font-bold">Kabul Et</button>
-                    </div>
-                `;
-            });
-
-            notifs.forEach(n => {
-                notifList.innerHTML += `
-                    <div class="bg-gray-900/60 px-3 py-2 rounded-xl text-xs text-gray-300 border border-gray-800 flex justify-between">
-                        <span>${n.text}</span>
-                        <span class="text-[9px] text-gray-500">${n.date}</span>
-                    </div>
-                `;
-            });
-        }
-
-        async function acceptRequest(requester) {
-            await fetch('/api/accept-request', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, requester })
-            });
-            refreshData(); openNotificationsModal();
-        }
-
-        async function createGroup() {
-            const groupName = document.getElementById('group-name-input').value;
-            const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
-            const members = Array.from(checkboxes).map(cb => cb.value);
-
-            const res = await fetch('/api/create-group', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ groupName, creator: currentUser, members })
-            });
-            const data = await res.json();
-            if (data.success) {
-                closeGroupModal(); refreshData();
-                selectRoom(data.groupId, data.groupName, null);
-            } else alert(data.message);
-        }
-
-        function logout() {
-            localStorage.removeItem('shnapp_user');
-            location.reload();
-        }
-    </script>
+      };
+    }
+
+    async function startCall(isAudioOnly) {
+      targetId = document.getElementById('target-user-input').value.trim();
+      if (!targetId) return alert("Önce arayacağınız kişinin ID'sini girin!");
+
+      await setupWebRTC(isAudioOnly);
+      document.getElementById('call-box').classList.remove('hidden');
+
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      
+      // Karşı tarafın socket ID'sini bulmak için server üzerinden yönlendiriyoruz
+      socket.emit('call_user', { to: targetId, offer, callerId: myId, isAudioOnly });
+    }
+
+    function endCall() {
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (peerConnection) peerConnection.close();
+      document.getElementById('call-box').classList.add('hidden');
+    }
+  </script>
 </body>
 </html>

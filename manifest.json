@@ -1,15 +1,9 @@
 {
-  "name": "shnapp",
-  "short_name": "shnapp",
+  "name": "SHNAPP WhatsApp Klonu",
+  "short_name": "SHNAPP",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#0084ff",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/733/733585.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "background_color": "#111827",
+  "theme_color": "#059669",
+  "icons": [{ "src": "/icon.png", "sizes": "192x192", "type": "image/png" }]
 }
